@@ -1,0 +1,10 @@
+
+javac FTPPackage.ServerCode.java
+javac FTPPackage.ServerCode.java
+
+execution: in bin directory of the project:
+
+java -classpath ./  FTPPackage.ServerCode
+
+java -classpath ./  FTPPackage.FTPClient
+
