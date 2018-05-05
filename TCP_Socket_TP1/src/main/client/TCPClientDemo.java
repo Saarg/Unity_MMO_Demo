@@ -1,7 +1,9 @@
-package main;
+package main.client;
 
 import java.io.*;
 import java.net.Socket;
+
+import main.common.*;
 
 public class TCPClientDemo 
 {
@@ -65,60 +67,52 @@ class TCPClient
             choice = Integer.parseInt(br.readLine());
             if(choice == 1)
             {
-                Calc c = new Calc();
-
-                ObjectOutputStream  oos = null;
-                
-                System.out.print("\nFirst number :");                
-                int a = Integer.parseInt(br.readLine());
-                System.out.print("\nSecond number :");                                
-                int b = Integer.parseInt(br.readLine());
-
-                try {
-                    dout.writeInt(0);
-                    oos = new ObjectOutputStream(dout);
-                    oos.writeObject(c);
-
-                    dout.writeInt(a);
-                    dout.writeInt(b);
-                    
-                    int result = din.readInt();
-                    
-                    System.out.println("\nServer said: " + a + " + " + b + " = " + result);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                dout.writeInt(0);
             }
             else if(choice == 2)
             {
                 try {
                     dout.writeInt(1);
-                    System.out.print("\nFirst number :");                
-                    int a = Integer.parseInt(br.readLine());
-                    System.out.print("\nSecond number :");                                
-                    int b = Integer.parseInt(br.readLine());
 
-                    File file = new File("./main/Calc.class");
+                    File file = new File("./main/common/Calc.class");
+                    dout.writeUTF("./main/common/Calc.class");
                     ByteStream.toStream(dout, file);
-
-                    dout.writeInt(a);
-                    dout.writeInt(b);
-                    
-                    int result = din.readInt();
-                    
-                    System.out.println("\nServer said: " + a + " + " + b + " = " + result);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
             else if(choice == 3)
             {
+                dout.writeInt(2);
                 dout.close();
                 System.exit(1);
             }
             else
             {
                 System.out.print("\nAre you even trying? :");
+            }
+
+            if (choice != 3) {
+                Calc c = new Calc();
+
+                ObjectOutputStream  oos = null;
+                
+                System.out.print("\nFirst number :");                
+                c.a = Integer.parseInt(br.readLine());
+                System.out.print("\nSecond number :");                                
+                c.b = Integer.parseInt(br.readLine());
+
+                try {
+                    oos = new ObjectOutputStream(dout);
+                    oos.writeObject(c);
+                    
+                    ObjectInputStream ois = new ObjectInputStream(din);
+                    Object result = ois.readObject();
+                    
+                    System.out.println("\nServer said: " + c.a + " + " + c.b + " = " + result.toString());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
