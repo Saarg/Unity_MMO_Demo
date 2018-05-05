@@ -23,6 +23,7 @@ public class Calc implements Serializable {
         return a + b;
     }
 
+    // this is only to  show the object serialization is working
     public int addInternal(){
         return this.a + this.b;
     }
