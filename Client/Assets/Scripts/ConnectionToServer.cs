@@ -15,8 +15,23 @@ public class ConnectionToServer : MonoBehaviour {
 	Socket socket = null;
 	int clientId = -1;
 
+	[SerializeField] NetworkIdentity player;
+	[SerializeField] List<NetworkIdentity> spawnablePrefabs;
+
+	List<NetworkIdentity> netComps = new List<NetworkIdentity>();
+	int idIndex = 1;
+
 	void Awake()
 	{
+		spawnablePrefabs.Add(player);
+
+		netComps.AddRange(FindObjectsOfType<NetworkIdentity>());
+		netComps.ForEach((netComp) => {
+			netComp.gameObject.SetActive(false);
+
+			netComp.id = idIndex++;
+		});
+
 		Connect();
 	}
 
@@ -52,6 +67,44 @@ public class ConnectionToServer : MonoBehaviour {
 		if (!socket.Connected) {
 			Debug.LogWarning("Failed to connect " + ip + ":" + port + "!");
 			gameObject.SetActive(false);
+		} else {
+			netComps.ForEach((netComp) => {
+				netComp.gameObject.SetActive(true);
+			});
+
+			GameObject p = Instantiate(player.gameObject, new Vector3(-5f, 0.5f, 0f), Quaternion.identity);
+			NetworkIdentity netId = p.GetComponent<NetworkIdentity>();
+			netId.hasAuthority = true;
+
+			SpawnMessage msg = new SpawnMessage(p.transform);
+			msg.prefabId = netComps.Count-1;
+
+			Send(msg);
+		}
+	}
+	
+	IEnumerator MsgCoroutine()
+	{
+		while (true) {
+			byte[] length = new byte[sizeof(int)];
+			Read(ref length);
+			byte[] id = new byte[1];
+			Read(ref id);
+			
+			NetworkMessage msg = null;
+			switch ((MessageId) id[0]) {
+				case MessageId.Transform: 
+					msg = Receive<TransformMessage>() as NetworkMessage;
+					break;
+				case MessageId.Spawn: 
+					msg = Receive<SpawnMessage>() as NetworkMessage;
+					break;
+			}
+
+			if (msg != null)
+				Debug.Log(msg.GetType());
+
+			yield return null;
 		}
 	}
 

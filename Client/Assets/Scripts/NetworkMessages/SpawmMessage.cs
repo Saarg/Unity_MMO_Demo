@@ -3,25 +3,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TransformMessage: NetworkMessage {
+public class SpawnMessage: NetworkMessage {
 
-    int sourceId;
+
+    public int prefabId = -1;
+    public int objectId = -1;
+
     float[] position = new float[3];
     float[] rotation = new float[4];
 
-    public TransformMessage() {
-        id = 1;
-        size = 1 + sizeof(int) + 7 * sizeof(float);
+    public SpawnMessage() {
+        id = 2;
+        size = 1 + 2 * sizeof(int) + 7 * sizeof(float);
     }
 
-    public TransformMessage(Transform t) {
-        id = 1;
-        size = 1 + sizeof(int) + 7 * sizeof(float);
+    public SpawnMessage(Transform t) {
+        id = 2;
+        size = 1 + 2 * sizeof(int) + 7 * sizeof(float);
 
         NetworkIdentity netId = t.GetComponent<NetworkIdentity>();
         if (netId == null)
             throw new NullReferenceException();
-        sourceId = netId.id;
 
         position [0] = t.position.x;
         position [1] = t.position.y;
@@ -33,15 +35,12 @@ public class TransformMessage: NetworkMessage {
         rotation [3] = t.rotation.z;
     }
 
-    public void Apply(Transform t) {
-        t.position = new Vector3(position[0], position[1], position[2]);
-        t.rotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
-    }
-
 	public override void Deserialize(ref byte[] buffer) {
         int offset = sizeof(int) + 1;
 
-        sourceId = BitConverter.ToInt32(buffer, offset);
+        prefabId = BitConverter.ToInt32(buffer, offset);
+        offset += sizeof(int);
+        objectId = BitConverter.ToInt32(buffer, offset);
         offset += sizeof(int);
 
         position [0] = BitConverter.ToSingle(buffer, offset);
@@ -68,8 +67,10 @@ public class TransformMessage: NetworkMessage {
 
         buffer[offset++] = id;
 
-        Buffer.BlockCopy(BitConverter.GetBytes(sourceId), 0, buffer, offset, sizeof(int));
-        offset += sizeof(int);        
+        Buffer.BlockCopy(BitConverter.GetBytes(prefabId), 0, buffer, offset, sizeof(int));
+        offset += sizeof(int); 
+        Buffer.BlockCopy(BitConverter.GetBytes(objectId), 0, buffer, offset, sizeof(int));
+        offset += sizeof(int);      
 
         Buffer.BlockCopy(position, 0, buffer, offset, position.Length*sizeof(float));
         offset += position.Length*sizeof(float);

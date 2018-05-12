@@ -77,6 +77,9 @@ void Login::Loop() {
             clients.push_back(clientSocket);
             players[clientSocket] = Player();
 
+            PlayerThread pthread(clientSocket, players[clientSocket]);
+            pthread.Run();
+
             printf("New client added\n");            
         }
     }

@@ -17,16 +17,39 @@ void Game::Loop() {
         for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
             Player& p = players[*it];
 
-            char id = 0;
-            read(*it, &id, 1);
-            
-            if (id == 1) {
-                read(*it, &p.x, 4);
-                read(*it, &p.y, 4);
-                read(*it, &p.z, 4); 
+            if (p.posDirty) {
+                short offset = 0;
+                char* buffer = new char[1 + sizeof(int) + 7*sizeof(float)];
 
-                std::cout << "Client " << *it << " is at " << p.x << " " << p.y << " " << p.z << "." << std::endl;        
-            }  
+                (*(int*)(buffer + offset)) = 1 + 7*sizeof(float);
+                offset += sizeof(int);
+
+                buffer[offset++] = 1;
+
+                (*(float*)(buffer + offset)) = p.x;
+                offset += sizeof(float);
+                (*(float*)(buffer + offset)) = p.y;
+                offset += sizeof(float);
+                (*(float*)(buffer + offset)) = p.z;
+                offset += sizeof(float);
+
+                (*(float*)(buffer + offset)) = p.qw;
+                offset += sizeof(float);
+                (*(float*)(buffer + offset)) = p.qx;
+                offset += sizeof(float);
+                (*(float*)(buffer + offset)) = p.qy;
+                offset += sizeof(float);
+                (*(float*)(buffer + offset)) = p.qz;
+                offset += sizeof(float);                
+
+                for (std::vector<int>::iterator jt = clients.begin(); jt != clients.end(); jt++) {
+                    if (*it == *jt)
+                        continue;
+
+                    // offset now has the value of the buffer's size
+                    send(*jt, buffer, offset, 0);
+                }            
+            }
         }
         // Server tick end.     
     }

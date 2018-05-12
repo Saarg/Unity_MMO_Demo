@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NetworkTransform : MonoBehaviour {
-
-	[SerializeField] bool hasAuthority = false;
+public class NetworkTransform : NetworkComponent {
 
 	float lastUpdate;
 	float updatePeriod = 1f;
@@ -26,7 +24,7 @@ public class NetworkTransform : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (connectionToServer != null && hasAuthority && Time.realtimeSinceStartup - lastUpdate > updatePeriod) {
+		if (connectionToServer != null && netId.hasAuthority && Time.realtimeSinceStartup - lastUpdate > updatePeriod) {
 			lastUpdate = Time.realtimeSinceStartup;			
 			TransformMessage message = new TransformMessage(transform);
 

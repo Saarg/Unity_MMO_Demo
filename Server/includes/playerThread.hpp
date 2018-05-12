@@ -1,5 +1,5 @@
-#ifndef LOGIN_HPP
-#define LOGIN_HPP
+#ifndef PLAYERTHREAD_HPP
+#define PLAYERTHREAD_HPP
 
 #include <iostream>
 #include <thread>
@@ -9,29 +9,27 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
 
 #include "player.hpp"
-#include "playerThread.hpp"
 
-class Login {
+class PlayerThread {
     public:
-        Login(int const port, std::vector<int>& clients, std::map<int, Player>& players);
+        PlayerThread(int client, Player& player);
 
         void Run();
-        void Loop();
 
     private:
-        int sockfd;
-        struct sockaddr_in address;
+        void Loop();
 
         std::thread* loop;
 
-        std::vector<int>& clients;
-        std::map<int, Player>& players;
+        int client;
+        Player player;
 };
 
 #endif
