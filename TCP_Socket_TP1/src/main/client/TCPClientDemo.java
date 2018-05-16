@@ -71,14 +71,14 @@ class TCPClient
             // If OBJECTColl
             if(choice == 1)
             {
-                // Send method
+                // Send method id
                 dout.writeInt(0);
             }
             // If BYTEColl
             else if(choice == 2)
             {
                 try {
-                    // Send method
+                    // Send method id
                     dout.writeInt(1);
                     
                     // Load class file
@@ -103,7 +103,8 @@ class TCPClient
                 // If the choice isn't a known choice just tell the user
                 System.out.print("\nAre you even trying? :");
             }
-
+            
+            // This part is common to both methods
             if (choice == 1 || choice == 2) {
                 // Create the object
                 Calc c = new Calc();
