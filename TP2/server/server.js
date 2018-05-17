@@ -2,80 +2,53 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+const ChatRoom = require('./chatroom');
+
 var chatrooms = {
-  general: {
-    users: {}
-  },
-  room01: {
-    users: {}
-  },
-  room02: {
-    users: {}
-  },
-  room03: {
-    users: {}
-  }
+  general: new ChatRoom(io, "general"),
+  room01: new ChatRoom(io, "room01"),
+  room02: new ChatRoom(io, "room02"),
+  room03: new ChatRoom(io, "room03")
 }
 
 io.on('connection', function(socket){
 
-
   socket.on('disconnect', function(){
-    for (let r in chatrooms) {
-      if (!chatrooms[r].users[socket.username])
-        continue;
-
-      delete chatrooms[r].users[socket.username];
-      console.log(socket.username + ' disconnected from ' + r);
-      io.emit("update_userlist", { name: r, users: Object.keys(chatrooms[r].users) });
+    for (var r in socket.rooms) {
+      chatrooms[r].disconect(socket);
     }
-    
-    for (var r in socket.rooms)
-      delete chatrooms[r].users[socket.username];
   });
 
   socket.on('user_login', function(username){
     for (let room in chatrooms) {
-      if (chatrooms[room].users[username]) {
+      if (chatrooms[room].findUser(username)) {
         socket.emit("login_refused");
         return;
       }
     }  
 
+    socket.username = username;
     console.log(username + ' connected');
 
-    socket.leaveAll();
-    socket.join("general");
-    socket.username = username
-    chatrooms["general"].users[username] = socket;
-    io.emit("update_userlist", { name: "general", users: Object.keys(chatrooms["general"].users) });
-
     for (let r in chatrooms) {
-      socket.emit("update_userlist", { name: r, users: Object.keys(chatrooms[r].users) }); 
+      chatrooms[r].updateUserList(socket);
     }
+
+    socket.leaveAll();
+    chatrooms["general"].join(socket);
   });
 
   socket.on('join_room', function(msg){
     for (let r in socket.rooms) {
-      if (chatrooms[r].users[socket.username]) {
-        delete chatrooms[r].users[socket.username];
-
-        io.emit("update_userlist", { name: r, users: Object.keys(chatrooms[r].users) }); 
-        console.log(socket.username + " left " + r);        
-        socket.leave(r);
-      }
+      chatrooms[r].leave(socket);
     }  
 
-    console.log(socket.username + " joined " + msg);
-    chatrooms[msg].users[socket.username] = socket;
-    socket.join(msg);
-    io.emit("update_userlist", { name: msg, users: Object.keys(chatrooms[msg].users) }); 
-    socket.emit("clear_chat");
+    chatrooms[msg].join(socket);
   });
 
   socket.on('chat_message', function(msg){
     for (let r in socket.rooms) {
-      io.in(r).emit('chat_message', msg);
+      chatrooms[r].emit('chat_message', msg);
     }
   });
 });
