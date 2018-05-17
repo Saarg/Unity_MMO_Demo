@@ -37,6 +37,9 @@ export default {
     },
     chat_message: function(val){
       this.messages.push(val);
+    },
+    clear_chat: function() {
+      this.messages = [];
     }
   },
   methods: {
