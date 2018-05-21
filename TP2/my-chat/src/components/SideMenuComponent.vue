@@ -4,7 +4,7 @@
             <li v-on:click="joinRoom(key)" v-for="(value, key) in rooms" :key="key">
                 {{ key }}
                 <ul id="users">
-                    <li v-for="user in value.users" :key="user">
+                    <li v-for="user in value" :key="user">
                         {{ user }}
                     </li>
                 </ul>
@@ -18,19 +18,37 @@ export default {
   name: 'SideMenuComponent',
   data: function () {
     return {
-        rooms: {}
+        curRoom: "general",
+        rooms: {
+            general: [],
+            room01: [],
+            room02: [],
+            room03: []
+        }
     }
   },
   sockets:{
-    update_userlist: function(data){
-        console.log(data);
+    user_join: function(data){
+        if (this.rooms[data.room].indexOf(data.username) != -1)
+            return;
+
+        if (!this.rooms[data.room])
+            this.rooms[data.room] = [];
         
-        this.rooms[data.name] = data;
+        this.rooms[data.room].push(data.username);
+        this.$forceUpdate();
+    },
+    user_left: function(data){
+        this.rooms[data.room].splice(this.rooms[data.room].indexOf(data.username), 1);
         this.$forceUpdate();
     }
   },
   methods: {
     joinRoom: function(room){
+        if (this.curRoom == room)
+            return;
+
+        this.curRoom = room;
         this.$socket.emit('join_room', room);
     }
   }
