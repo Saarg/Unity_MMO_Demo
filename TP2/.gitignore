@@ -3,7 +3,7 @@
 */dist
 node_modules/*
 /bin
-/obj
+*/obj
 
 # local env files
 .env.local
