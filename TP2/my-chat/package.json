@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "express": "^4.16.3",
     "socket.io-p2p": "^2.2.0",
     "vue": "^2.5.16",
     "vue-socket.io": "^2.1.1-b"
