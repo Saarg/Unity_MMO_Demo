@@ -1,13 +1,13 @@
 // Based on https://github.com/elad/node-cluster-socket.io
-var express = require('express'),
-    cluster = require('cluster'),
-    net = require('net'),
-    sio = require('socket.io'),
-    sio_redis = require('socket.io-redis'),
-    farmhash = require('farmhash');
+const express = require('express');
+const cluster = require('cluster');
+const net = require('net');
+const sio = require('socket.io');
+const sio_redis = require('socket.io-redis');
+const farmhash = require('farmhash');
 
-var port = 3000,
-    num_processes = 2;//require('os').cpus().length;
+const port = 3000;
+const num_processes = require('os').cpus().length;
 
 if (cluster.isMaster) {
 	// This stores our workers. We need to keep them to be able to reference
@@ -58,62 +58,16 @@ if (cluster.isMaster) {
 	// Here you might use middleware, attach routes, etc.
 
 	// Don't expose our internal server to the outside.
-	var server = app.listen(0, 'localhost'),
-	    io = sio(server);
+	var server = app.listen(0, 'localhost');
+	var io = sio(server);
 
 	// Tell Socket.IO to use the redis adapter. By default, the redis
 	// server is assumed to be on localhost:6379. You don't have to
 	// specify them explicitly unless you want to change them.
-	io.adapter(sio_redis({ host: 'localhost', port: 6379 }));
+	io.adapter(sio_redis({ host: '51.15.247.163', port: 6379 }));
 
-  // Here you might use Socket.IO middleware for authorization etc.
-  const ChatRoom = require('./chatroom');
-
-  var chatrooms = {
-    general: new ChatRoom(io,"general"),
-    room01: new ChatRoom(io,"room01"),
-    room02: new ChatRoom(io,"room02"),
-    room03: new ChatRoom(io,"room03")
-  }
-
-  io.on('connection', function(socket){
-    socket.on('disconnect', function(){
-      for (let room in chatrooms) {
-          chatrooms[room].disconect(socket);
-      }
-    });
-  
-    socket.on('user_login', function(username){
-      for (let room in chatrooms) {
-        if (chatrooms[room].findUser(username)) {
-          socket.emit("login_refused");
-          return;
-        }
-      }  
-  
-      socket.username = username;
-      console.log(username + ' connected');
-  
-      socket.leaveAll();
-      chatrooms["general"].join(socket);
-    });
-  
-    socket.on('join_room', function(msg){
-      io.of('/').adapter.clientRooms(socket.id, (err, rooms) => {
-        rooms.forEach(r => {
-          chatrooms[r].leave(socket);
-        });
-      });
-                 
-      chatrooms[msg].join(socket);
-    });
-  
-    socket.on('chat_message', function(msg){
-      for (let r in socket.rooms) {
-        chatrooms[socket.rooms[r]].emit('chat_message', msg);
-      }
-    });
-  });
+  const msg_handler = require('./message_handler');
+  msg_handler(io);
 
 	// Listen to messages sent from the master. Ignore everything else.
 	process.on('message', function(message, connection) {
