@@ -9,7 +9,11 @@ const farmhash = require('farmhash');
 const port = 3000;
 const num_processes = require('os').cpus().length;
 
+
+
 if (cluster.isMaster) {
+    console.log("Server started.")
+
     // This stores our workers. We need to keep them to be able to reference
     // them based on source IP address. It's also useful for auto-restart,
     // for example.

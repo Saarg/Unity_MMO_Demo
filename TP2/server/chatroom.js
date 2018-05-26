@@ -2,6 +2,7 @@ function Chatroom(io, name) {
     this.io = io;
     this.name = name;
     this.users = {};
+    this.messagesHistory = [];
 }
 
 Chatroom.prototype.join = function join(socket) {
@@ -15,8 +16,14 @@ Chatroom.prototype.join = function join(socket) {
             if (error) throw error;
 
             clients.forEach(client => {
-                if (client != socket.id)
+                if (client != socket.id) {
                     socket.emit("user_join", { room: this.name, username: this.io.sockets.connected[client].username });
+                }
+                else {
+                    for (var i = 0, len = this.messagesHistory.length; i < len; i++) {
+                        socket.emit("chat_message", this.messagesHistory[i]);
+                    }
+                }
             });
         });
 
@@ -50,6 +57,7 @@ Chatroom.prototype.findUser = function findUser(username) {
 
 Chatroom.prototype.emit = function emit(msg_id, msg) {
     this.io.in(this.name).emit(msg_id, msg);
+    this.messagesHistory.push(msg);
 }
 
 module.exports = Chatroom;
