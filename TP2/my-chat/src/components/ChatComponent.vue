@@ -40,6 +40,12 @@
             },
             clear_chat: function () {
                 this.messages = [];
+            },
+            user_join: function (data) {
+                this.messages.push({ username: data.username, message: " joined " + data.room });
+            },
+            user_left: function (data) {
+                this.messages.push({ username: data.username, message: " left " + data.room });
             }
         },
         methods: {
