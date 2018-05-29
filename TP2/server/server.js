@@ -9,8 +9,6 @@ const farmhash = require('farmhash');
 const port = 3000;
 const num_processes = require('os').cpus().length;
 
-
-
 if (cluster.isMaster) {
     console.log("Server started.")
 

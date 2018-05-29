@@ -36,6 +36,9 @@
             login_refused: function () {
                 this.sendUsername();
             },
+            chat_history: function (data) {
+                this.messages = data;
+            },
             chat_message: function (val) {
                 this.messages.push(val);
             },
@@ -48,10 +51,13 @@
                     return;
                 }
 
+                if (data.room != this.room)
+                    return;
+
                 this.messages.push({ username: data.username, message: " joined " + data.room });
             },
             user_left: function (data) {
-                if (data.username == this.username)
+                if (data.room != this.room)
                     return;
                 
                 this.messages.push({ username: data.username, message: " left " + data.room });

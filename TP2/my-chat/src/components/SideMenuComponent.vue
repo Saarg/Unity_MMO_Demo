@@ -28,9 +28,19 @@
             }
         },
         sockets: {
+            user_is_in_room: function (data) {
+                this.user_join(data);
+            },
             user_join: function (data) {
-                console.log("user join called")
-
+                this.user_join(data);
+            },
+            user_left: function (data) {
+                this.rooms[data.room].splice(this.rooms[data.room].indexOf(data.username), 1);
+                this.$forceUpdate();
+            }
+        },
+        methods: {
+            user_join: function (data) {
                 if (this.rooms[data.room].indexOf(data.username) != -1)
                     return;
               
@@ -40,15 +50,7 @@
                 this.rooms[data.room].push(data.username);
                 this.$forceUpdate();
             },
-            user_left: function (data) {
-                this.rooms[data.room].splice(this.rooms[data.room].indexOf(data.username), 1);
-                this.$forceUpdate();
-            }
-        },
-        methods: {
             joinRoom: function (room) {
-                console.log("join room called")
-
                 if (this.curRoom == room)
                     return;
                 

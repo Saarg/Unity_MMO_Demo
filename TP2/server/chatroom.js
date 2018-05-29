@@ -17,17 +17,14 @@ Chatroom.prototype.join = function join(socket) {
 
             clients.forEach(client => {
                 if (client != socket.id) {
-                    socket.emit("user_join", { room: this.name, username: this.io.sockets.connected[client].username });
+                    socket.emit("user_is_in_room", { room: this.name, username: this.io.sockets.connected[client].username });
                 }
                 else {
-                    for (var i = 0, len = this.messagesHistory.length; i < len; i++) {
-                        socket.emit("chat_message", this.messagesHistory[i]);
-                    }
+                    socket.emit("chat_history", this.messagesHistory);
                 }
             });
         });
 
-        socket.emit("clear_chat");
         console.log(socket.username + " joined " + this.name);
     });
 }
