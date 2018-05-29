@@ -23,6 +23,7 @@
         },
         data: function () {
             return {
+                room: "general",
                 username: "",
                 messages: [],
                 curMessage: ""
@@ -42,9 +43,17 @@
                 this.messages = [];
             },
             user_join: function (data) {
+                if (data.username == this.username) {
+                    this.room = data.room;
+                    return;
+                }
+
                 this.messages.push({ username: data.username, message: " joined " + data.room });
             },
             user_left: function (data) {
+                if (data.username == this.username)
+                    return;
+                
                 this.messages.push({ username: data.username, message: " left " + data.room });
             }
         },
