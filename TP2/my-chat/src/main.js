@@ -2,7 +2,10 @@ import Vue from 'vue'
 import App from './App.vue'
 import VueSocketio from 'vue-socket.io';
 
-Vue.use(VueSocketio, 'http://51.15.247.163:3000');
+// server
+// Vue.use(VueSocketio, 'http://51.15.247.163:3000');
+// local
+Vue.use(VueSocketio, 'http://localhost:3000');
 
 Vue.config.productionTip = false
 

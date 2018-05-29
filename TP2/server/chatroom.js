@@ -2,6 +2,7 @@ function Chatroom(io, name) {
     this.io = io;
     this.name = name;
     this.users = {};
+    this.messagesHistory = [];
 }
 
 Chatroom.prototype.join = function join(socket) {
@@ -13,43 +14,50 @@ Chatroom.prototype.join = function join(socket) {
 
         this.io.of('/').adapter.clients([this.name], (error, clients) => {
             if (error) throw error;
-            
+
             clients.forEach(client => {
-                if (client != socket.id)
+                if (client != socket.id) {
                     socket.emit("user_join", { room: this.name, username: this.io.sockets.connected[client].username });
+                }
+                else {
+                    for (var i = 0, len = this.messagesHistory.length; i < len; i++) {
+                        socket.emit("chat_message", this.messagesHistory[i]);
+                    }
+                }
             });
         });
 
         socket.emit("clear_chat");
-        console.log(socket.username + " joined " + this.name);  
-    });        
+        console.log(socket.username + " joined " + this.name);
+    });
 }
 
-Chatroom.prototype.leave =function leave(socket) { 
+Chatroom.prototype.leave = function leave(socket) {
     delete this.users[socket.username];
 
     this.io.of('/').adapter.remoteLeave(socket.id, this.name, (err) => {
         if (err) { /* unknown id */ }
-        this.io.emit("user_left", { room: this.name, username: socket.username }); 
-        console.log(socket.username + " left " + this.name);   
+        this.io.emit("user_left", { room: this.name, username: socket.username });
+        console.log(socket.username + " left " + this.name);
     });
 }
 
-Chatroom.prototype.disconect =function disconect(socket) {
+Chatroom.prototype.disconnect = function disconnect(socket) {
     delete this.users[socket.username];
 
     this.io.of('/').adapter.remoteLeave(socket.id, this.name, (err) => {
         if (err) { /* unknown id */ }
-        console.log(socket.username + " left " + this.name);   
+        console.log(socket.username + " left " + this.name);
     });
 }
 
-Chatroom.prototype.findUser =function findUser(username) {
+Chatroom.prototype.findUser = function findUser(username) {
     return this.users[username];
 }
 
-Chatroom.prototype.emit =function emit(msg_id, msg) {
+Chatroom.prototype.emit = function emit(msg_id, msg) {
     this.io.in(this.name).emit(msg_id, msg);
+    this.messagesHistory.push(msg);
 }
 
 module.exports = Chatroom;
