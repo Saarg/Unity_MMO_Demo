@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <SideMenuComponent />
-    <ChatComponent msg="Welcome to Your chat"/>
+    <ChatComponent/>
   </div>
 </template>
 

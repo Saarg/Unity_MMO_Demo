@@ -1,7 +1,7 @@
 <template>
     <div class="sidemenu">
         <ul id="rooms">
-            <li onmouseover="" style="cursor: pointer;" v-on:click="joinRoom(key)" v-for="(value, key) in rooms" :key="key">
+            <li v-on:click="joinRoom(key)" v-for="(value, key) in rooms" :key="key" v-bind:class="{ current: curRoom==key, empty: value.length == 0 }">
                 {{ key }}
                 <ul id="users">
                     <li v-for="user in value" :key="user">
@@ -78,13 +78,47 @@
         padding: 0;
     }
 
-        #rooms, #users li {
-            padding: 5px 10px;
-            color: white;
-            text-align: left;
-        }
+    #rooms, #users li {
+        padding: 0px;
+        padding-bottom: 10px;
+        margin: 0px;
+        color: white;
+        text-align: left;
+    }
 
-            #rooms, #users li:nth-child(odd) {
-                background: #EEE2;
-            }
+    #rooms li {
+        background-color: #3862a2;
+        padding-top: 10px;      
+        padding-left: 10px;       
+        cursor: pointer;   
+    }
+
+    #rooms .empty {
+        padding-bottom: 3px;
+    }
+
+    #rooms li:hover {
+        background-color: #26497e;
+    }
+
+    #users {
+        margin-top: 10px;       
+    }
+
+    #users li {
+        margin-left: -10px;
+        padding-left: 20px;        
+    }
+
+    #users li:nth-child(even) {
+        background-color: #345b97;
+    } 
+
+    #users li:nth-child(odd)  {
+        background-color: #3966ab;
+    }
+
+    #rooms .current {
+        background-color: #224780;
+    }
 </style>
