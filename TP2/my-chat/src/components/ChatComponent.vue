@@ -142,9 +142,9 @@
     }
 
     #messages li {
-        padding: 5px 10px;
+        padding: 5px 160px 5px 10px;
         width: 100%;
-        text-align: left;
+        text-align: justify;
     }
 
     #messages li:nth-child(odd) {
