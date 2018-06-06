@@ -80,7 +80,30 @@ void Login::Loop() {
             PlayerThread pthread(clientSocket, players[clientSocket]);
             pthread.Run();
 
-            printf("New client added\n");            
+            printf("New client added with id %d \n", clientSocket);
+
+            // Sending spawn message to all clients including myself
+            short offset = 0;
+            char* spawBuffer = new char[1 + 3*sizeof(int)];
+
+            (*(int*)(spawBuffer + offset)) = 2*sizeof(int);
+            offset += sizeof(int);
+
+            spawBuffer[offset++] = 2;
+
+            // player prefab id is 0
+            (*(int*)(spawBuffer + offset)) = 0;
+            offset += sizeof(int);
+            // client id
+            (*(int*)(spawBuffer + offset)) = clientSocket;
+            offset += sizeof(int);   
+
+            for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
+                // offset now has the value of the buffer's size
+                send(*it, spawBuffer, offset, 0);
+
+                printf("Spawn message sent to client %d \n", *it);   
+            }         
         }
     }
 }

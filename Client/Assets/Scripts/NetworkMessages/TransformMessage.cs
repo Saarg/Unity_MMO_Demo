@@ -39,7 +39,7 @@ public class TransformMessage: NetworkMessage {
     }
 
 	public override void Deserialize(ref byte[] buffer) {
-        int offset = sizeof(int) + 1;
+        int offset = 0;
 
         sourceId = BitConverter.ToInt32(buffer, offset);
         offset += sizeof(int);

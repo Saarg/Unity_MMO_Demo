@@ -46,5 +46,7 @@ void PlayerThread::Loop() {
         } else if (id == 2){
             std::cout << length << " " << (int)id << ";" << std::endl;
         }
+
+        std::this_thread::sleep_for (std::chrono::milliseconds(100));
     }
 }

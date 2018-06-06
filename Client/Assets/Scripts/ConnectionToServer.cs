@@ -15,16 +15,13 @@ public class ConnectionToServer : MonoBehaviour {
 	Socket socket = null;
 	int clientId = -1;
 
-	[SerializeField] NetworkIdentity player;
 	[SerializeField] List<NetworkIdentity> spawnablePrefabs;
 
-	List<NetworkIdentity> netComps = new List<NetworkIdentity>();
+	[SerializeField] List<NetworkIdentity> netComps = new List<NetworkIdentity>();
 	int idIndex = 1;
 
 	void Awake()
 	{
-		spawnablePrefabs.Add(player);
-
 		netComps.AddRange(FindObjectsOfType<NetworkIdentity>());
 		netComps.ForEach((netComp) => {
 			netComp.gameObject.SetActive(false);
@@ -72,37 +69,57 @@ public class ConnectionToServer : MonoBehaviour {
 				netComp.gameObject.SetActive(true);
 			});
 
-			GameObject p = Instantiate(player.gameObject, new Vector3(-5f, 0.5f, 0f), Quaternion.identity);
-			NetworkIdentity netId = p.GetComponent<NetworkIdentity>();
-			netId.hasAuthority = true;
+			StartCoroutine(MsgCoroutine());
 
-			SpawnMessage msg = new SpawnMessage(p.transform);
-			msg.prefabId = netComps.Count-1;
+			// GameObject p = Instantiate(player.gameObject, new Vector3(-5f, 0.5f, 0f), Quaternion.identity);
+			// NetworkIdentity netId = p.GetComponent<NetworkIdentity>();
+			// netId.hasAuthority = true;
 
-			Send(msg);
+			// netComps.Add(p.GetComponent<NetworkIdentity>());
+
+			// SpawnMessage msg = new SpawnMessage(p.transform);
+			// msg.prefabId = spawnablePrefabs.Count-1;
+			// msg.objectId = netComps.Count-1;
+
+			// Send(msg);
 		}
 	}
-	
+
+	// Message handling
 	IEnumerator MsgCoroutine()
 	{
 		while (true) {
-			byte[] length = new byte[sizeof(int)];
-			Read(ref length);
+			byte[] buffer = new byte[sizeof(int)];
+			Read(ref buffer);
+			int length = BitConverter.ToInt32(buffer, 0);
+
+			if (length <= 0) {
+				yield return null;
+				continue;
+			}		
+
 			byte[] id = new byte[1];
 			Read(ref id);
-			
-			NetworkMessage msg = null;
-			switch ((MessageId) id[0]) {
-				case MessageId.Transform: 
-					msg = Receive<TransformMessage>() as NetworkMessage;
-					break;
-				case MessageId.Spawn: 
-					msg = Receive<SpawnMessage>() as NetworkMessage;
-					break;
-			}
 
-			if (msg != null)
-				Debug.Log(msg.GetType());
+			buffer = new byte[length];
+			Read(ref buffer);				
+			
+			if ((MessageId) id[0] == MessageId.Transform) {
+				TransformMessage msg = new TransformMessage();
+				msg.Deserialize(ref buffer);			
+
+			} else if ((MessageId) id[0] ==  MessageId.Spawn){
+				SpawnMessage msg = new SpawnMessage();
+				msg.Deserialize(ref buffer);
+
+				Debug.Log(msg.prefabId);
+				GameObject spawned = Instantiate(spawnablePrefabs[msg.prefabId].gameObject);
+
+				NetworkIdentity netId = spawned.GetComponent<NetworkIdentity>();
+				netComps.Add(netId);
+
+				netId.id = msg.objectId;
+			}
 
 			yield return null;
 		}
@@ -115,16 +132,6 @@ public class ConnectionToServer : MonoBehaviour {
 		Debug.Log(BitConverter.ToString(buffer));
 
 		Write(ref buffer);
-	}
-
-	public T Receive<T>() where T : NetworkMessage {
-		T msg = default(T);
-
-		byte[] buffer = new byte[msg.Size];
-		Read(ref buffer);
-		Debug.Log(BitConverter.ToString(buffer));
-
-		return msg;
 	}
 
 	int Read(ref byte[] bytes, SocketFlags flags = SocketFlags.None) {
