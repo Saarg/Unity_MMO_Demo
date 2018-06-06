@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
@@ -69,50 +70,31 @@ public class ConnectionToServer : MonoBehaviour {
 				netComp.gameObject.SetActive(true);
 			});
 
-			StartCoroutine(MsgCoroutine());
-
-			// GameObject p = Instantiate(player.gameObject, new Vector3(-5f, 0.5f, 0f), Quaternion.identity);
-			// NetworkIdentity netId = p.GetComponent<NetworkIdentity>();
-			// netId.hasAuthority = true;
-
-			// netComps.Add(p.GetComponent<NetworkIdentity>());
-
-			// SpawnMessage msg = new SpawnMessage(p.transform);
-			// msg.prefabId = spawnablePrefabs.Count-1;
-			// msg.objectId = netComps.Count-1;
-
-			// Send(msg);
+			StartCoroutine(MsgHandling());
+			
+			Thread t = new Thread(new ThreadStart(MsgThread));
+			t.Start();
 		}
 	}
 
-	// Message handling
-	IEnumerator MsgCoroutine()
-	{
-		while (true) {
-			byte[] buffer = new byte[sizeof(int)];
-			Read(ref buffer);
-			int length = BitConverter.ToInt32(buffer, 0);
-
-			if (length <= 0) {
-				yield return null;
+	Queue<byte[]> messageQueue = new Queue<byte[]>();
+	IEnumerator MsgHandling() {
+		while(true) {
+			if (messageQueue.Count <= 0) {
+				yield return new WaitForSeconds(0.1f);
 				continue;
-			}		
+			}
 
-			byte[] id = new byte[1];
-			Read(ref id);
-
-			buffer = new byte[length];
-			Read(ref buffer);				
+			byte[] buffer = messageQueue.Dequeue();
 			
-			if ((MessageId) id[0] == MessageId.Transform) {
+			if ((MessageId) buffer[0] == MessageId.Transform) {
 				TransformMessage msg = new TransformMessage();
 				msg.Deserialize(ref buffer);			
 
-			} else if ((MessageId) id[0] ==  MessageId.Spawn){
+			} else if ((MessageId) buffer[0] ==  MessageId.Spawn){
 				SpawnMessage msg = new SpawnMessage();
 				msg.Deserialize(ref buffer);
 
-				Debug.Log(msg.prefabId);
 				GameObject spawned = Instantiate(spawnablePrefabs[msg.prefabId].gameObject);
 
 				NetworkIdentity netId = spawned.GetComponent<NetworkIdentity>();
@@ -122,6 +104,27 @@ public class ConnectionToServer : MonoBehaviour {
 			}
 
 			yield return null;
+		}
+	}
+
+	// Message reception
+	void MsgThread()
+	{
+		while (true) {
+			byte[] buffer = new byte[sizeof(int)];
+			Read(ref buffer);
+			int length = BitConverter.ToInt32(buffer, 0);
+
+			if (length <= 0) {
+				continue;
+			}		
+
+			buffer = new byte[length + 1];
+			Read(ref buffer);		
+
+			Debug.Log("Received message id: " + (MessageId) buffer[0]);
+
+			messageQueue.Enqueue(buffer);
 		}
 	}
 

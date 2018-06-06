@@ -36,7 +36,12 @@ public class SpawnMessage: NetworkMessage {
     }
 
 	public override void Deserialize(ref byte[] buffer) {
-        int offset = 0;
+        if (buffer[0] != id) {
+            Debug.LogError("Deserializing wrong packet id fond!");
+            return;
+        }
+
+        int offset = 1;
 
         prefabId = BitConverter.ToInt32(buffer, offset);
         offset += sizeof(int);
