@@ -71,22 +71,22 @@ void Login::Loop() {
             */
             char buffer[1024] = {0};
             read(clientSocket, buffer, 1024);
-            printf("%s\n", buffer);
+            printf("%s %d \n", buffer, clientSocket);
             send(clientSocket , &clientSocket, sizeof(int), 0 );
 
             clients.push_back(clientSocket);
             players[clientSocket] = Player();
 
-            PlayerThread pthread(clientSocket, players[clientSocket]);
-            pthread.Run();
+            players[clientSocket].pthread = new PlayerThread(clientSocket, players[clientSocket]);
+            players[clientSocket].pthread->Run();
 
             printf("New client added with id %d \n", clientSocket);
 
             // Sending spawn message to all clients including myself
             short offset = 0;
-            char* spawBuffer = new char[1 + 3*sizeof(int)];
+            char* spawBuffer = new char[1 + 3*sizeof(int)] + sizeof(bool);
 
-            (*(int*)(spawBuffer + offset)) = 2*sizeof(int);
+            (*(int*)(spawBuffer + offset)) = 2*sizeof(int) + sizeof(bool);
             offset += sizeof(int);
 
             spawBuffer[offset++] = 2;
@@ -99,11 +99,24 @@ void Login::Loop() {
             offset += sizeof(int);   
 
             for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
-                // offset now has the value of the buffer's size
-                send(*it, spawBuffer, offset, 0);
+                (*(bool*)(spawBuffer + offset)) = (clientSocket == *it);
 
-                printf("Spawn message sent to client %d \n", *it);   
-            }         
+                // offset now has the value of the buffer's size
+                send(*it, spawBuffer, offset + sizeof(bool), 0);
+            }
+
+            // Spawn all already spawned players
+            (*(bool*)(spawBuffer + offset)) = false;               
+
+            for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
+                if (clientSocket == *it)
+                    continue;
+
+                (*(int*)(spawBuffer + offset - sizeof(int))) = *it;
+
+                // offset now has the value of the buffer's size
+                send(clientSocket, spawBuffer, offset + sizeof(bool), 0);
+            }  
         }
     }
 }

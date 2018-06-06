@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class TransformMessage: NetworkMessage {
 
-    int sourceId;
+    public int sourceId { get; protected set; }
     float[] position = new float[3];
     float[] rotation = new float[4];
 
@@ -39,7 +39,7 @@ public class TransformMessage: NetworkMessage {
     }
 
 	public override void Deserialize(ref byte[] buffer) {
-        int offset = 0;
+        int offset = 1;
 
         sourceId = BitConverter.ToInt32(buffer, offset);
         offset += sizeof(int);

@@ -1,8 +1,15 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 
+class PlayerThread;
+
 class Player {
     public:
+        Player();
+        ~Player();
+
+        PlayerThread* pthread;        
+
         bool posDirty;
 
         float x = 0;

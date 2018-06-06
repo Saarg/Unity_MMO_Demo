@@ -40,9 +40,7 @@ void PlayerThread::Loop() {
             player.qy = *((float*) buffer);
             buffer += sizeof(float);         
             player.qz = *((float*) buffer);
-            buffer += sizeof(float);
-
-            std::cout << "Client " << client << " is at " << player.x << " " << player.y << " " << player.z << "." << std::endl;        
+            buffer += sizeof(float);      
         } else if (id == 2){
             std::cout << length << " " << (int)id << ";" << std::endl;
         }

@@ -29,7 +29,7 @@ class PlayerThread {
         std::thread* loop;
 
         int client;
-        Player player;
+        Player& player;
 };
 
 #endif

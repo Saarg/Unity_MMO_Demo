@@ -19,12 +19,15 @@ void Game::Loop() {
 
             if (p.posDirty) {
                 short offset = 0;
-                char* buffer = new char[1 + sizeof(int) + 7*sizeof(float)];
+                char* buffer = new char[1 + 2*sizeof(int) + 7*sizeof(float)];
 
-                (*(int*)(buffer + offset)) = 1 + 7*sizeof(float);
+                (*(int*)(buffer + offset)) = sizeof(int) + 7*sizeof(float);
                 offset += sizeof(int);
 
                 buffer[offset++] = 1;
+
+                (*(int*)(buffer + offset)) = *it;
+                offset += sizeof(int);
 
                 (*(float*)(buffer + offset)) = p.x;
                 offset += sizeof(float);

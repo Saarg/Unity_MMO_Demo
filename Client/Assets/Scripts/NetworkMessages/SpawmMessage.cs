@@ -8,18 +8,19 @@ public class SpawnMessage: NetworkMessage {
 
     public int prefabId = -1;
     public int objectId = -1;
+    public bool hasAuthority = false;
 
     float[] position = new float[3];
     float[] rotation = new float[4];
 
     public SpawnMessage() {
         id = 2;
-        size = 1 + 2 * sizeof(int);// + 7 * sizeof(float);
+        size = 1 + 2 * sizeof(int) + sizeof(bool);// + 7 * sizeof(float);
     }
 
     public SpawnMessage(Transform t) {
         id = 2;
-        size = 1 + 2 * sizeof(int);// + 7 * sizeof(float);
+        size = 1 + 2 * sizeof(int) + sizeof(bool);// + 7 * sizeof(float);
 
         NetworkIdentity netId = t.GetComponent<NetworkIdentity>();
         if (netId == null)
@@ -47,6 +48,8 @@ public class SpawnMessage: NetworkMessage {
         offset += sizeof(int);
         objectId = BitConverter.ToInt32(buffer, offset);
         offset += sizeof(int);
+        hasAuthority = BitConverter.ToBoolean(buffer, offset);
+        offset += sizeof(bool);
 
         // position [0] = BitConverter.ToSingle(buffer, offset);
         // offset += sizeof(float);
@@ -76,6 +79,8 @@ public class SpawnMessage: NetworkMessage {
         offset += sizeof(int); 
         Buffer.BlockCopy(BitConverter.GetBytes(objectId), 0, buffer, offset, sizeof(int));
         offset += sizeof(int);      
+        Buffer.BlockCopy(BitConverter.GetBytes(hasAuthority), 0, buffer, offset, sizeof(bool));
+        offset += sizeof(bool);      
 
         // Buffer.BlockCopy(position, 0, buffer, offset, position.Length*sizeof(float));
         // offset += position.Length*sizeof(float);

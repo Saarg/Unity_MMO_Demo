@@ -89,7 +89,10 @@ public class ConnectionToServer : MonoBehaviour {
 			
 			if ((MessageId) buffer[0] == MessageId.Transform) {
 				TransformMessage msg = new TransformMessage();
-				msg.Deserialize(ref buffer);			
+				msg.Deserialize(ref buffer);
+
+				NetworkIdentity netId = netComps.Find(item => item.id == msg.sourceId);
+				msg.Apply(netId.transform);
 
 			} else if ((MessageId) buffer[0] ==  MessageId.Spawn){
 				SpawnMessage msg = new SpawnMessage();
@@ -101,6 +104,7 @@ public class ConnectionToServer : MonoBehaviour {
 				netComps.Add(netId);
 
 				netId.id = msg.objectId;
+				netId.hasAuthority = msg.hasAuthority;
 			}
 
 			yield return null;
@@ -132,7 +136,6 @@ public class ConnectionToServer : MonoBehaviour {
 		byte[] buffer;
 
 		msg.Serialize(out buffer);
-		Debug.Log(BitConverter.ToString(buffer));
 
 		Write(ref buffer);
 	}
