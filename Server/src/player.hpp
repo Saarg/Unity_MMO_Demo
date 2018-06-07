@@ -8,18 +8,15 @@ class Player {
         Player();
         ~Player();
 
+        short Serialize(char* buffer, short offset);
+        short Deserialize(char* buffer, short offset);
+
         PlayerThread* pthread;        
 
         bool posDirty;
 
-        float x = 0;
-        float y = 0;
-        float z = 0;
-
-        float qw = 0;
-        float qx = 0;
-        float qy = 0;
-        float qz = 0;
+        float position[3];
+        float rotation[4];
 };
 
 #endif

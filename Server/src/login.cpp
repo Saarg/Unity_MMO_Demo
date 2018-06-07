@@ -1,5 +1,7 @@
 #include "login.hpp"
 
+#include "NetworkMessages/spawnMessage.hpp"
+
 Login::Login(int const port, std::vector<int>& clients, std::map<int, Player>& players): clients(clients), players(players) {
     /* 
      * AF_INET => IPv4 || AF_INET6 => IPv6
@@ -83,39 +85,27 @@ void Login::Loop() {
             printf("New client added with id %d \n", clientSocket);
 
             // Sending spawn message to all clients including myself
-            short offset = 0;
-            char* spawBuffer = new char[1 + 3*sizeof(int)] + sizeof(bool);
+            SpawnMessage msg;
 
-            (*(int*)(spawBuffer + offset)) = 2*sizeof(int) + sizeof(bool);
-            offset += sizeof(int);
-
-            spawBuffer[offset++] = 2;
-
-            // player prefab id is 0
-            (*(int*)(spawBuffer + offset)) = 0;
-            offset += sizeof(int);
-            // client id
-            (*(int*)(spawBuffer + offset)) = clientSocket;
-            offset += sizeof(int);   
+            msg.prefabId = 0;
+            msg.objectId = clientSocket;
 
             for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
-                (*(bool*)(spawBuffer + offset)) = (clientSocket == *it);
+                msg.hasAuthority = (clientSocket == *it);
 
-                // offset now has the value of the buffer's size
-                send(*it, spawBuffer, offset + sizeof(bool), 0);
+                send(*it, msg.Serialize(), msg.Size(), 0);
             }
 
             // Spawn all already spawned players
-            (*(bool*)(spawBuffer + offset)) = false;               
+            msg.hasAuthority = false;               
 
             for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
                 if (clientSocket == *it)
                     continue;
 
-                (*(int*)(spawBuffer + offset - sizeof(int))) = *it;
+                msg.objectId = *it;
 
-                // offset now has the value of the buffer's size
-                send(clientSocket, spawBuffer, offset + sizeof(bool), 0);
+                send(*it, msg.Serialize(), msg.Size(), 0);
             }  
         }
     }

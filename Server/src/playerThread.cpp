@@ -13,34 +13,16 @@ void PlayerThread::Run() {
 void PlayerThread::Loop() {
     while (true) {
         int length = 0;
-        read(client, &length, 4);        
-
-        char id = 0;
-        read(client, &id, 1);
+        read(client, &length, sizeof(int));
 
         char* buffer = new char[length];
         read(client, buffer, length);
+
+        short id = buffer[0];
         
         if (id == 1) {
             player.posDirty = true;
-            
-            buffer += sizeof(int);
-
-            player.x = *((float*) buffer);
-            buffer += sizeof(float);
-            player.y = *((float*) buffer);
-            buffer += sizeof(float);            
-            player.z = *((float*) buffer);
-            buffer += sizeof(float);
-
-            player.qw = *((float*) buffer);
-            buffer += sizeof(float);
-            player.qx = *((float*) buffer);
-            buffer += sizeof(float);            
-            player.qy = *((float*) buffer);
-            buffer += sizeof(float);         
-            player.qz = *((float*) buffer);
-            buffer += sizeof(float);      
+            player.Deserialize(buffer, sizeof(int));   
         } else if (id == 2){
             std::cout << length << " " << (int)id << ";" << std::endl;
         }

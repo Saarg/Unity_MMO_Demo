@@ -123,7 +123,7 @@ public class ConnectionToServer : MonoBehaviour {
 				continue;
 			}		
 
-			buffer = new byte[length + 1];
+			buffer = new byte[length];
 			Read(ref buffer);		
 
 			Debug.Log("Received message id: " + (MessageId) buffer[0]);

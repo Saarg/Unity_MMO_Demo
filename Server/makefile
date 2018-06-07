@@ -1,10 +1,10 @@
 CC = g++
-INC_DIR = ./includes
-CFLAGS= -std=c++11 -Wall -g -I$(INC_DIR)
+CFLAGS= -std=c++11 -Wall -g
 EXEC_NAME = Server
 INCLUDES = 
 LIBS = -pthread
-OBJ_FILES = $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
+OBJ_FILES = $(patsubst %.cpp,%.o,$(wildcard src/**/*.cpp)) \
+$(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
 INSTALL_DIR = /usr/bin
 
 all : $(EXEC_NAME)
