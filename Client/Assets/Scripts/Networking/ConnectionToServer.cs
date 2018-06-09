@@ -6,12 +6,15 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ConnectionToServer : MonoBehaviour {
 
 	IPHostEntry hostEntry = null;
 	[SerializeField] String ip;
 	[SerializeField] int port;
+
+	[SerializeField] bool autoconnect = true;
 
 	Socket socket = null;
 	int clientId = -1;
@@ -33,11 +36,13 @@ public class ConnectionToServer : MonoBehaviour {
 			netComps.Add(idIndex, netComp);
 		};
 
-		Connect();
+		if (autoconnect)
+			Connect();
 	}
 
 	void OnDestroy() {
-		msgReceiveThread.Abort();
+		if (msgReceiveThread != null)
+			msgReceiveThread.Abort();
 	}
 
 	void Connect() {
@@ -114,6 +119,7 @@ public class ConnectionToServer : MonoBehaviour {
 				msg.Deserialize(ref buffer);
 
 				GameObject spawned = Instantiate(spawnablePrefabs[msg.prefabId].gameObject);
+				SceneManager.MoveGameObjectToScene(spawned, gameObject.scene);
 
 				NetworkIdentity netId = spawned.GetComponent<NetworkIdentity>();
 				netComps.Add(msg.objectId, netId);
@@ -147,7 +153,7 @@ public class ConnectionToServer : MonoBehaviour {
 		}
 	}
 
-	public void Send(NetworkMessage msg) {
+	public void Send(NetworkMessage msg) {		
 		byte[] buffer;
 
 		msg.Serialize(out buffer);
@@ -156,10 +162,16 @@ public class ConnectionToServer : MonoBehaviour {
 	}
 
 	int Read(ref byte[] bytes, SocketFlags flags = SocketFlags.None) {
+		if (socket == null)
+			return 0;
+		
 		return socket.Receive(bytes, flags);
 	}
 
 	int Write(ref byte[] bytes, SocketFlags flags = SocketFlags.None) {
+		if (socket == null)
+			return 0;
+		
 		return socket.Send(bytes, flags);
 	}
 }
