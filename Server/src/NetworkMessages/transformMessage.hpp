@@ -43,23 +43,6 @@ class TransformMessage: public NetworkMessage {
             return buffer;
         }
 
-        char* Serialize(Player& p) {
-            short offset = 0;
-
-            (*(int*)(buffer + offset)) = size;
-            offset += sizeof(int);
-
-            buffer[offset++] = id;
-
-            
-            (*(int*)(buffer + offset)) = sourceId;
-            offset += sizeof(int);
-            
-            p.Serialize(buffer, offset);
-
-            return buffer;
-        }
-
         virtual void Deserialize(char* buffer) {
             short offset = 0;
 

@@ -5,7 +5,8 @@ using UnityEngine;
 public class NetworkTransform : NetworkComponent {
 
 	float lastUpdate;
-	float updatePeriod = 1f;
+	[Range(0f, 30f)]
+	[SerializeField] float updatePerSec = 10f;
 	ConnectionToServer connectionToServer = null;
 
 	// Use this for initialization
@@ -24,7 +25,7 @@ public class NetworkTransform : NetworkComponent {
 	
 	// Update is called once per frame
 	void Update () {
-		if (connectionToServer != null && netId.hasAuthority && Time.realtimeSinceStartup - lastUpdate > updatePeriod) {
+		if (connectionToServer != null && netId.hasAuthority && updatePerSec != 0 && Time.realtimeSinceStartup - lastUpdate > 1 / updatePerSec) {
 			lastUpdate = Time.realtimeSinceStartup;			
 			TransformMessage message = new TransformMessage(transform);
 

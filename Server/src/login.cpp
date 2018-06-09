@@ -93,19 +93,22 @@ void Login::Loop() {
             for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
                 msg.hasAuthority = (clientSocket == *it);
 
-                send(*it, msg.Serialize(), msg.Size(), 0);
+                msg.Send(*it);
             }
 
             // Spawn all already spawned players
-            msg.hasAuthority = false;               
+            SpawnMessage msg2;
+
+            msg2.prefabId = 0;
+            msg2.hasAuthority = false;               
 
             for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
                 if (clientSocket == *it)
                     continue;
 
-                msg.objectId = *it;
+                msg2.objectId = *it;
 
-                send(*it, msg.Serialize(), msg.Size(), 0);
+                msg2.Send(clientSocket);
             }  
         }
     }

@@ -6,7 +6,7 @@ using UnityEngine;
 public class TransformMessage: NetworkMessage {
 
     public int sourceId { get; protected set; }
-    float[] position = new float[3];
+    public float[] position = new float[3];
     float[] rotation = new float[4];
 
     public TransformMessage() {

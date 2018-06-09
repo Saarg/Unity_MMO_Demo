@@ -13,22 +13,33 @@ void Game::Run() {
 
 void Game::Loop() {
     while (true) {
-        std::this_thread::sleep_for (std::chrono::milliseconds(100));
+        std::this_thread::sleep_for (std::chrono::milliseconds(1));
 
         // Server tick start.
         for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
             Player& p = players[*it];
 
             if (p.posDirty) {
-                TransformMessage msg;       
+                p.posDirty = false;
+
+                TransformMessage msg;
+                msg.sourceId = *it;
+                msg.position[0] = p.position[0];
+                msg.position[1] = p.position[1];
+                msg.position[2] = p.position[2];
+
+                msg.rotation[0] = p.rotation[0];
+                msg.rotation[1] = p.rotation[1];
+                msg.rotation[2] = p.rotation[2];
+                msg.rotation[3] = p.rotation[3];
 
                 for (std::vector<int>::iterator jt = clients.begin(); jt != clients.end(); jt++) {
                     if (*it == *jt)
                         continue;
 
                     // offset now has the value of the buffer's size
-                    send(*jt, msg.Serialize(p), msg.Size(), 0);
-                }            
+                    msg.Send(*jt);
+                }  
             }
         }
         // Server tick end.     

@@ -18,19 +18,26 @@ public class ConnectionToServer : MonoBehaviour {
 
 	[SerializeField] List<NetworkIdentity> spawnablePrefabs;
 
-	[SerializeField] List<NetworkIdentity> netComps = new List<NetworkIdentity>();
+	[SerializeField] Dictionary<int, NetworkIdentity> netComps = new Dictionary<int, NetworkIdentity>();
 	int idIndex = 1;
+
+	Thread msgReceiveThread;
 
 	void Awake()
 	{
-		netComps.AddRange(FindObjectsOfType<NetworkIdentity>());
-		netComps.ForEach((netComp) => {
+		NetworkIdentity[] ids = FindObjectsOfType<NetworkIdentity>();
+		foreach (NetworkIdentity netComp in ids) {
 			netComp.gameObject.SetActive(false);
 
 			netComp.id = idIndex++;
-		});
+			netComps.Add(idIndex, netComp);
+		};
 
 		Connect();
+	}
+
+	void OnDestroy() {
+		msgReceiveThread.Abort();
 	}
 
 	void Connect() {
@@ -66,14 +73,14 @@ public class ConnectionToServer : MonoBehaviour {
 			Debug.LogWarning("Failed to connect " + ip + ":" + port + "!");
 			gameObject.SetActive(false);
 		} else {
-			netComps.ForEach((netComp) => {
-				netComp.gameObject.SetActive(true);
-			});
+			foreach ( KeyValuePair<int, NetworkIdentity> netComp in netComps) {
+				netComp.Value.gameObject.SetActive(true);
+			};
 
 			StartCoroutine(MsgHandling());
 			
-			Thread t = new Thread(new ThreadStart(MsgThread));
-			t.Start();
+			msgReceiveThread = new Thread(new ThreadStart(MsgThread));
+			msgReceiveThread.Start();
 		}
 	}
 
@@ -91,7 +98,15 @@ public class ConnectionToServer : MonoBehaviour {
 				TransformMessage msg = new TransformMessage();
 				msg.Deserialize(ref buffer);
 
-				NetworkIdentity netId = netComps.Find(item => item.id == msg.sourceId);
+				if (!netComps.ContainsKey(msg.sourceId)) {
+					Debug.LogWarning("Object with netId " + msg.sourceId + " not found!");
+					continue;
+				}
+
+				NetworkIdentity netId = netComps[msg.sourceId];
+
+				Debug.Log("object netid: " + msg.sourceId + " at x:" + msg.position[0]);
+
 				msg.Apply(netId.transform);
 
 			} else if ((MessageId) buffer[0] ==  MessageId.Spawn){
@@ -101,7 +116,7 @@ public class ConnectionToServer : MonoBehaviour {
 				GameObject spawned = Instantiate(spawnablePrefabs[msg.prefabId].gameObject);
 
 				NetworkIdentity netId = spawned.GetComponent<NetworkIdentity>();
-				netComps.Add(netId);
+				netComps.Add(msg.objectId, netId);
 
 				netId.id = msg.objectId;
 				netId.hasAuthority = msg.hasAuthority;

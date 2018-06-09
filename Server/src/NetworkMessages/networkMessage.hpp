@@ -14,6 +14,8 @@ class NetworkMessage {
         virtual char* Serialize() = 0;
         virtual void Deserialize(char* buffer) = 0;
 
+        inline void Send(int socket) { send(socket, Serialize(), size + sizeof(int), 0); }
+
         inline int Id() { return id; }
         inline int Size() { return size; }
 

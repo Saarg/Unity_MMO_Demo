@@ -22,7 +22,7 @@ void PlayerThread::Loop() {
         
         if (id == 1) {
             player.posDirty = true;
-            player.Deserialize(buffer, sizeof(int));   
+            player.Deserialize(buffer, sizeof(int) + 1);   
         } else if (id == 2){
             std::cout << length << " " << (int)id << ";" << std::endl;
         }

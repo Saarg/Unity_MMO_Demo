@@ -6,6 +6,9 @@ using UnityEngine;
 public class NetworkComponent : MonoBehaviour {
 
 	protected NetworkIdentity netId;
+
+	public bool HasAuthority { get { return netId.HasAuthority; } }
+
 	void Awake()
 	{
 		netId = GetComponent<NetworkIdentity>();
