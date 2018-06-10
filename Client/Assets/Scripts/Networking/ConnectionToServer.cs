@@ -10,7 +10,6 @@ using UnityEngine.SceneManagement;
 
 public class ConnectionToServer : MonoBehaviour {
 
-	IPHostEntry hostEntry = null;
 	[SerializeField] String ip;
 	[SerializeField] int port;
 
@@ -55,56 +54,47 @@ public class ConnectionToServer : MonoBehaviour {
 			Disconnect();
 		}
 
-		hostEntry = Dns.GetHostEntry(ip);
-		foreach(IPAddress address in hostEntry.AddressList) {
-			IPEndPoint ipe = new IPEndPoint(address, port);
-			socket = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+		socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-			socket.Connect(ipe);
+		socket.Connect(ip, port);
 
-			if(socket.Connected)
-			{
-				byte[] hello = Encoding.UTF8.GetBytes("hello from client");
-				socket.Send(hello, SocketFlags.None);
+		if(socket.Connected)
+		{
+			byte[] hello = Encoding.UTF8.GetBytes("hello from client");
+			socket.Send(hello, SocketFlags.None);
 
-				byte[] buffer = new byte[sizeof(int)];
-				Read(ref buffer);
-				int length = BitConverter.ToInt32(buffer, 0);
+			byte[] buffer = new byte[sizeof(int)];
+			Read(ref buffer);
+			int length = BitConverter.ToInt32(buffer, 0);
 
-				buffer = new byte[length];
-				Read(ref buffer);
+			buffer = new byte[length];
+			Read(ref buffer);
 
-				if ((MessageId) buffer[0] == MessageId.Spawn) {
-					
-					SpawnMessage msg = new SpawnMessage();
-					msg.Deserialize(ref buffer);
-					clientId = msg.objectId;
+			if ((MessageId) buffer[0] == MessageId.Spawn) {
+				
+				SpawnMessage msg = new SpawnMessage();
+				msg.Deserialize(ref buffer);
+				clientId = msg.objectId;
 
-					if (player != null) {
-						player.connectionToServer.Leave(player);						
+				if (player != null) {
+					player.connectionToServer.Leave(player);						
 
-						SceneManager.MoveGameObjectToScene(player.gameObject, gameObject.scene);
-						player.id = msg.objectId;
+					SceneManager.MoveGameObjectToScene(player.gameObject, gameObject.scene);
+					player.id = msg.objectId;
 
-						player.connectionToServer = this;
+					player.connectionToServer = this;
 
-						netComps.Add(msg.objectId, player);
-					} else {
-						messageQueue.Enqueue(buffer);
-					}
+					netComps.Add(msg.objectId, player);
 				} else {
-					Debug.LogError("[" + sceneName + "] Failed to get client data");
-					Disconnect();
-					break;
+					messageQueue.Enqueue(buffer);
 				}
+			} else {
+				Debug.LogError("[" + sceneName + "] Failed to get client data");
+				Disconnect();
+				return;
+			}
 
-				Debug.Log("[" + sceneName + "] Client connected to " + ip + ":" + port + " with id: " + clientId + "!");
-				break;
-			}
-			else
-			{
-				continue;
-			}
+			Debug.Log("[" + sceneName + "] Client connected to " + ip + ":" + port + " with id: " + clientId + "!");
 		}
 
 		if (!socket.Connected) {
