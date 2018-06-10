@@ -76,8 +76,6 @@ void Login::Loop() {
             char buffer[1024] = {0};
             read(clientSocket, buffer, 1024);
             printf("%s %d \n", buffer, clientSocket);
-            *(int*)(buffer) = clientSocket;
-            send(clientSocket , buffer, sizeof(int), 0 );
 
             printf("New client added with id %d \n", clientSocket);
             game.SpawnPlayer(clientSocket);  

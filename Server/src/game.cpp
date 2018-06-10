@@ -32,11 +32,7 @@ void Game::Spawn(int prefabId, int owner, bool hasAuthority) {
 
 void Game::SpawnPlayer(int clientSocket) {
     // Init player
-    clients.push_back(clientSocket);
     players[clientSocket] = Player();
-
-    players[clientSocket].pthread = new PlayerThread(clientSocket, players[clientSocket], *this);
-    players[clientSocket].pthread->Run();
 
     // Sending spawn message to all clients including myself
     SpawnMessage msg;
@@ -44,8 +40,11 @@ void Game::SpawnPlayer(int clientSocket) {
     msg.prefabId = 0;
     msg.objectId = clientSocket;
 
+    msg.hasAuthority = true;
+    msg.Send(clientSocket);
+
     for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
-        msg.hasAuthority = (clientSocket == *it);
+        msg.hasAuthority = false;
 
         msg.Send(*it);
     }
@@ -64,6 +63,12 @@ void Game::SpawnPlayer(int clientSocket) {
 
         msg2.Send(clientSocket);
     }
+
+    // Player can now be seen by others
+    clients.push_back(clientSocket);
+
+    players[clientSocket].pthread = new PlayerThread(clientSocket, players[clientSocket], *this);
+    players[clientSocket].pthread->Run();
 }
 
 void Game::Despawn(int objectId) {

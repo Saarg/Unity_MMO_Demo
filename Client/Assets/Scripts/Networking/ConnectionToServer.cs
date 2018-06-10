@@ -25,10 +25,17 @@ public class ConnectionToServer : MonoBehaviour {
 
 	Thread msgReceiveThread;
 
+	String sceneName;
+
 	void Awake()
 	{
+		sceneName = gameObject.scene.name;
+
 		NetworkIdentity[] ids = FindObjectsOfType<NetworkIdentity>();
 		foreach (NetworkIdentity netComp in ids) {
+			if (netComp.gameObject.scene != gameObject.scene)
+				continue;
+
 			netComp.gameObject.SetActive(false);
 
 			netComp.id = idIndex++;
@@ -40,18 +47,14 @@ public class ConnectionToServer : MonoBehaviour {
 	}
 
 	void OnDestroy() {
-		if (msgReceiveThread != null)
-			msgReceiveThread.Abort();
-		
-		if (socket != null) {
-			DespawnMessage msg = new DespawnMessage();;
-			msg.objectId = clientId;
-
-			Send(msg);
-		}
+		Disconnect();
 	}
 
-	void Connect() {
+	void Connect(NetworkIdentity player = null) {
+		if (socket != null && socket.Connected) {
+			Disconnect();
+		}
+
 		hostEntry = Dns.GetHostEntry(ip);
 		foreach(IPAddress address in hostEntry.AddressList) {
 			IPEndPoint ipe = new IPEndPoint(address, port);
@@ -61,17 +64,41 @@ public class ConnectionToServer : MonoBehaviour {
 
 			if(socket.Connected)
 			{
-				byte[] msg = Encoding.UTF8.GetBytes("hello from client");
+				byte[] hello = Encoding.UTF8.GetBytes("hello from client");
+				socket.Send(hello, SocketFlags.None);
 
-				socket.Send(msg, SocketFlags.None);
+				byte[] buffer = new byte[sizeof(int)];
+				Read(ref buffer);
+				int length = BitConverter.ToInt32(buffer, 0);
 
-				byte[] bytes = new byte[sizeof(int)];
-				if (socket.Receive(bytes, SocketFlags.None) > 0)
-					clientId = BitConverter.ToInt32(bytes, 0);
-				else
-					Debug.LogError("Failed to get client id");
+				buffer = new byte[length];
+				Read(ref buffer);
 
-				Debug.Log("Client connected to " + ip + ":" + port + " with id: " + clientId + "!");
+				if ((MessageId) buffer[0] == MessageId.Spawn) {
+					
+					SpawnMessage msg = new SpawnMessage();
+					msg.Deserialize(ref buffer);
+					clientId = msg.objectId;
+
+					if (player != null) {
+						player.connectionToServer.Leave(player);						
+
+						SceneManager.MoveGameObjectToScene(player.gameObject, gameObject.scene);
+						player.id = msg.objectId;
+
+						player.connectionToServer = this;
+
+						netComps.Add(msg.objectId, player);
+					} else {
+						messageQueue.Enqueue(buffer);
+					}
+				} else {
+					Debug.LogError("[" + sceneName + "] Failed to get client data");
+					Disconnect();
+					break;
+				}
+
+				Debug.Log("[" + sceneName + "] Client connected to " + ip + ":" + port + " with id: " + clientId + "!");
 				break;
 			}
 			else
@@ -81,12 +108,12 @@ public class ConnectionToServer : MonoBehaviour {
 		}
 
 		if (!socket.Connected) {
-			Debug.LogWarning("Failed to connect " + ip + ":" + port + "!");
+			Debug.LogWarning("[" + sceneName + "] Failed to connect " + ip + ":" + port + "!");
 			gameObject.SetActive(false);
 		} else {
 			foreach ( KeyValuePair<int, NetworkIdentity> netComp in netComps) {
 				netComp.Value.gameObject.SetActive(true);
-			};
+			}
 
 			StartCoroutine(MsgHandling());
 			
@@ -95,11 +122,56 @@ public class ConnectionToServer : MonoBehaviour {
 		}
 	}
 
+	void Disconnect() {
+		if (socket == null || !socket.Connected) {
+			return;
+		}
+
+		if (msgReceiveThread != null)
+			msgReceiveThread.Abort();
+		
+		DespawnMessage msg = new DespawnMessage();;
+		msg.objectId = clientId;
+
+		Send(msg);
+
+		socket.Close();
+
+		foreach ( KeyValuePair<int, NetworkIdentity> netComp in netComps) {
+			if (netComp.Value != null)
+				Destroy(netComp.Value.gameObject);
+		}
+		netComps.Clear();
+
+		Debug.Log("[" + sceneName + "] Disconected");
+	}
+
+	void OnTriggerEnter(Collider other)
+    {
+		if (other.tag != "Player" || other.gameObject.scene == gameObject.scene)
+			return;
+
+        Debug.Log("[" + sceneName + "] Entered by " + other.name);
+
+		NetworkIdentity netId = other.GetComponent<NetworkIdentity>();
+
+		if (netId.hasAuthority)
+			Connect(netId);
+    }
+
+	void Leave(NetworkIdentity player) {
+		Debug.Log("[" + sceneName + "] Left by " + player.id);
+		
+		netComps.Remove(player.id);
+		Disconnect();
+	}
+
+	// Message handling
 	Queue<byte[]> messageQueue = new Queue<byte[]>();
 	IEnumerator MsgHandling() {
 		while(true) {
 			if (messageQueue.Count <= 0) {
-				yield return new WaitForSeconds(0.1f);
+				yield return null;
 				continue;
 			}
 
@@ -110,17 +182,15 @@ public class ConnectionToServer : MonoBehaviour {
 				msg.Deserialize(ref buffer);
 
 				if (!netComps.ContainsKey(msg.sourceId)) {
-					Debug.LogWarning("Object with netId " + msg.sourceId + " not found!");
+					Debug.LogWarning("[" + sceneName + "] Object with netId " + msg.sourceId + " not found!");
 					continue;
 				}
 
 				NetworkIdentity netId = netComps[msg.sourceId];
 
-				Debug.Log("object netid: " + msg.sourceId + " at x:" + msg.position[0]);
-
 				msg.Apply(netId.transform);
 
-			} else if ((MessageId) buffer[0] ==  MessageId.Spawn){
+			} else if ((MessageId) buffer[0] ==  MessageId.Spawn) {
 				SpawnMessage msg = new SpawnMessage();
 				msg.Deserialize(ref buffer);
 
@@ -131,7 +201,18 @@ public class ConnectionToServer : MonoBehaviour {
 				netComps.Add(msg.objectId, netId);
 
 				netId.id = msg.objectId;
+				netId.connectionToServer = this;
 				netId.hasAuthority = msg.hasAuthority;
+			} else if ((MessageId) buffer[0] ==  MessageId.Despawn) {
+				DespawnMessage msg = new DespawnMessage();
+				msg.Deserialize(ref buffer);
+
+				if (netComps.ContainsKey(msg.objectId)) {
+					NetworkIdentity netComp = netComps[msg.objectId];
+					netComps.Remove(msg.objectId);
+
+					Destroy(netComp.gameObject);
+				}
 			}
 
 			yield return null;
@@ -142,6 +223,8 @@ public class ConnectionToServer : MonoBehaviour {
 	void MsgThread()
 	{
 		while (true) {
+			Thread.Sleep(10);
+
 			byte[] buffer = new byte[sizeof(int)];
 			Read(ref buffer);
 			int length = BitConverter.ToInt32(buffer, 0);
@@ -153,7 +236,7 @@ public class ConnectionToServer : MonoBehaviour {
 			buffer = new byte[length];
 			Read(ref buffer);		
 
-			Debug.Log("Received message id: " + (MessageId) buffer[0]);
+			Debug.Log("[" + sceneName + "] Received message id: " + (MessageId) buffer[0]);
 
 			messageQueue.Enqueue(buffer);
 		}
@@ -167,15 +250,17 @@ public class ConnectionToServer : MonoBehaviour {
 		Write(ref buffer);
 	}
 
+
+	// Socket methods to send buffers
 	int Read(ref byte[] bytes, SocketFlags flags = SocketFlags.None) {
-		if (socket == null)
+		if (socket == null || !socket.Connected)
 			return 0;
 		
 		return socket.Receive(bytes, flags);
 	}
 
 	int Write(ref byte[] bytes, SocketFlags flags = SocketFlags.None) {
-		if (socket == null)
+		if (socket == null || !socket.Connected)
 			return 0;
 		
 		return socket.Send(bytes, flags);
