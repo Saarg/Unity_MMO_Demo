@@ -20,7 +20,6 @@ public class ConnectionToServer : MonoBehaviour {
 	int clientId = -1;
 
 	[SerializeField] List<NetworkIdentity> spawnablePrefabs;
-
 	[SerializeField] Dictionary<int, NetworkIdentity> netComps = new Dictionary<int, NetworkIdentity>();
 	int idIndex = 1;
 
@@ -43,6 +42,13 @@ public class ConnectionToServer : MonoBehaviour {
 	void OnDestroy() {
 		if (msgReceiveThread != null)
 			msgReceiveThread.Abort();
+		
+		if (socket != null) {
+			DespawnMessage msg = new DespawnMessage();;
+			msg.objectId = clientId;
+
+			Send(msg);
+		}
 	}
 
 	void Connect() {
@@ -65,7 +71,7 @@ public class ConnectionToServer : MonoBehaviour {
 				else
 					Debug.LogError("Failed to get client id");
 
-				Debug.Log("Client connected to " + ip + ":" + port + "!");
+				Debug.Log("Client connected to " + ip + ":" + port + " with id: " + clientId + "!");
 				break;
 			}
 			else

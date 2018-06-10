@@ -1,17 +1,26 @@
 #include "playerThread.hpp"
 #include <stdio.h>
 
-PlayerThread::PlayerThread(int client, Player& player): client(client), player(player) {
+#include "NetworkMessages/spawnMessage.hpp"
+#include "NetworkMessages/despawnMessage.hpp"
+
+PlayerThread::PlayerThread(int client, Player& player, Game& game): client(client), player(player), game(game) {
 
 }
 
+PlayerThread::~PlayerThread() {
+    std::cout << "Client " << client << "'s thread dying" << std::endl;
+}
+
 void PlayerThread::Run() { 
+    running = true;    
+    
     loop = new std::thread(&PlayerThread::Loop, this);
     loop->detach();
 }
 
 void PlayerThread::Loop() {
-    while (true) {
+    while (running) {
         int length = 0;
         read(client, &length, sizeof(int));
 
@@ -22,11 +31,32 @@ void PlayerThread::Loop() {
         
         if (id == 1) {
             player.posDirty = true;
-            player.Deserialize(buffer, sizeof(int) + 1);   
-        } else if (id == 2){
-            std::cout << length << " " << (int)id << ";" << std::endl;
+            player.Deserialize(buffer, 1 + sizeof(int));   
+        } else if (id == 2) {
+            SpawnMessage msg;
+            msg.Deserialize(buffer);
+
+            if (msg.objectId == client) {
+                std::cout << "client: " << client << " requested spawn of prefab:" << msg.prefabId << std::endl;
+                game.Spawn(msg.prefabId, msg.objectId);
+            }
+        } else if (id == 3) {
+            DespawnMessage msg;
+            msg.Deserialize(buffer);
+
+            if (msg.objectId == client) {
+                std::cout << "client: " << client << " gracefully disconected" << std::endl;
+                game.DespawnPlayer(client);
+            } else if (msg.objectId >= 10000) {
+                std::cout << "client: " << client << " requested despawn of object:" << msg.objectId << std::endl;
+                game.Despawn(msg.objectId);    
+            } else {
+                std::cout << "client: " << client << " requested despawn of object:" << msg.objectId << " whitout the right to do so!" << std::endl;                
+            }
         }
 
-        std::this_thread::sleep_for (std::chrono::milliseconds(100));
+        std::this_thread::sleep_for (std::chrono::milliseconds(10));
     }
+
+    delete this;
 }

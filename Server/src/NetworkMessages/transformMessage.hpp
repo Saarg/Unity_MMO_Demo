@@ -44,18 +44,7 @@ class TransformMessage: public NetworkMessage {
         }
 
         virtual void Deserialize(char* buffer) {
-            short offset = 0;
-
-            int s = (*(int*)(buffer + offset)) = size;
-            offset += sizeof(int);
-
-            short i = buffer[offset++];
-
-            if (s != size || i != id) {
-                std::cout << "wrong data received" << std::endl;
-                return;
-            }
-
+            short offset = 1;
             
             sourceId = (*(int*)(buffer + offset));
             offset += sizeof(int);

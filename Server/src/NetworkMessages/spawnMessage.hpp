@@ -29,12 +29,21 @@ class SpawnMessage: public NetworkMessage {
             (*(bool*)(buffer + offset)) = hasAuthority;
             offset += sizeof(bool);   
             
-
             return buffer;
         }
 
         virtual void Deserialize(char* buffer) {
-            std::cout << "SpawnMesaage should not be received by the server" << std::endl;
+            short offset = 1;
+
+            // player prefab id is 0
+            prefabId = (*(int*)(buffer + offset));
+            offset += sizeof(int);
+            // object requesting spawn or id of new object
+            objectId = (*(int*)(buffer + offset));
+            offset += sizeof(int);   
+
+            hasAuthority = (*(bool*)(buffer + offset));
+            offset += sizeof(bool);   
         }
 
         int prefabId = -1;

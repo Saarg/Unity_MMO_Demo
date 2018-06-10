@@ -15,14 +15,17 @@
 #include <netinet/in.h>
 #include <string.h>
 
+#include "game.hpp"
 #include "player.hpp"
 
 class PlayerThread {
     public:
-        PlayerThread(int client, Player& player);
+        PlayerThread(int client, Player& player, Game& game);
+        ~PlayerThread();
 
         void Run();
 
+        bool running = false;
     private:
         void Loop();
 
@@ -30,6 +33,8 @@ class PlayerThread {
 
         int client;
         Player& player;
+
+        Game& game;
 };
 
 #endif

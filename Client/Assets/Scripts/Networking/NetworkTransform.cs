@@ -30,8 +30,6 @@ public class NetworkTransform : NetworkComponent {
 			TransformMessage message = new TransformMessage(transform);
 
 			connectionToServer.Send(message);
-
-			Debug.Log("Sent position");
 		}
 	}
 }

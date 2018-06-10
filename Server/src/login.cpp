@@ -2,7 +2,8 @@
 
 #include "NetworkMessages/spawnMessage.hpp"
 
-Login::Login(int const port, std::vector<int>& clients, std::map<int, Player>& players): clients(clients), players(players) {
+Login::Login(int const port, std::vector<int>& clients, std::map<int, Player>& players, Game& game): 
+        clients(clients), players(players), game(game) {
     /* 
      * AF_INET => IPv4 || AF_INET6 => IPv6
      * SOCK_STREAM: TCP || SOCK_DGRAM: UDP
@@ -68,48 +69,18 @@ void Login::Loop() {
             exit(EXIT_FAILURE);
         } else {
             /*
+            *  Handcheck
             *  Read buffer send by client
-            *  Send "hello"
+            *  Send id
             */
             char buffer[1024] = {0};
             read(clientSocket, buffer, 1024);
             printf("%s %d \n", buffer, clientSocket);
-            send(clientSocket , &clientSocket, sizeof(int), 0 );
-
-            clients.push_back(clientSocket);
-            players[clientSocket] = Player();
-
-            players[clientSocket].pthread = new PlayerThread(clientSocket, players[clientSocket]);
-            players[clientSocket].pthread->Run();
+            *(int*)(buffer) = clientSocket;
+            send(clientSocket , buffer, sizeof(int), 0 );
 
             printf("New client added with id %d \n", clientSocket);
-
-            // Sending spawn message to all clients including myself
-            SpawnMessage msg;
-
-            msg.prefabId = 0;
-            msg.objectId = clientSocket;
-
-            for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
-                msg.hasAuthority = (clientSocket == *it);
-
-                msg.Send(*it);
-            }
-
-            // Spawn all already spawned players
-            SpawnMessage msg2;
-
-            msg2.prefabId = 0;
-            msg2.hasAuthority = false;               
-
-            for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
-                if (clientSocket == *it)
-                    continue;
-
-                msg2.objectId = *it;
-
-                msg2.Send(clientSocket);
-            }  
+            game.SpawnPlayer(clientSocket);  
         }
     }
 }

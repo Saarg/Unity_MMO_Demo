@@ -26,8 +26,8 @@ int main(int argc, char const *argv[])
         return 0;
     }
 
-    Login login(atoi(argv[1]), clients, players);    
     Game game(clients, players);
+    Login login(atoi(argv[1]), clients, players, game);
 
     std::cout << '\n' << "Press [ENTER] to quit" << std::endl;
     

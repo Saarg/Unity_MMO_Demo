@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-enum MessageId {None, Transform, Spawn}
+enum MessageId {None, Transform, Spawn, Despawn}
 
 public class NetworkMessage {
 
