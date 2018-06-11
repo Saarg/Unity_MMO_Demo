@@ -13,7 +13,7 @@ public class NetworkTransform : NetworkComponent {
 	void Start () {
 		foreach (ConnectionToServer connection in FindObjectsOfType<ConnectionToServer>())
 		{
-			if (connection.transform.root == transform.root) {
+			if (connection.gameObject.scene == gameObject.scene) {
 				connectionToServer = connection;
 				break;
 			}

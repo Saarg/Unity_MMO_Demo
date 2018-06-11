@@ -9,13 +9,14 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class ConnectionToServer : MonoBehaviour {
-
+	
 	[SerializeField] String ip;
 	[SerializeField] int port;
 
 	[SerializeField] bool autoconnect = true;
 
-	Socket socket = null;
+	TcpClient tcpClient;
+	Socket socket;
 	int clientId = -1;
 
 	[SerializeField] List<NetworkIdentity> spawnablePrefabs;
@@ -54,9 +55,9 @@ public class ConnectionToServer : MonoBehaviour {
 			Disconnect();
 		}
 
-		socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+		tcpClient = new TcpClient(ip, port);
 
-		socket.Connect(ip, port);
+		socket = tcpClient.Client;
 
 		if(socket.Connected)
 		{
@@ -113,7 +114,13 @@ public class ConnectionToServer : MonoBehaviour {
 	}
 
 	void Disconnect() {
-		if (socket == null || !socket.Connected) {
+		foreach ( KeyValuePair<int, NetworkIdentity> netComp in netComps) {
+			if (netComp.Value != null)
+				Destroy(netComp.Value.gameObject);
+		}
+		netComps.Clear();
+
+		if (tcpClient == null || !tcpClient.Connected) {
 			return;
 		}
 
@@ -125,13 +132,7 @@ public class ConnectionToServer : MonoBehaviour {
 
 		Send(msg);
 
-		socket.Close();
-
-		foreach ( KeyValuePair<int, NetworkIdentity> netComp in netComps) {
-			if (netComp.Value != null)
-				Destroy(netComp.Value.gameObject);
-		}
-		netComps.Clear();
+		// tcpClient.Close();
 
 		Debug.Log("[" + sceneName + "] Disconected");
 	}
