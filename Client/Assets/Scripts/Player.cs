@@ -13,7 +13,7 @@ public class Player : NetworkComponent {
 	
 	void Update () {
         if (netId.hasAuthority) {
-            transform.Translate(new Vector3(Time.deltaTime * Input.GetAxis(horizontalInput), 0, Time.deltaTime * Input.GetAxis(verticalInput)));
+            transform.Translate(new Vector3(Time.deltaTime * Input.GetAxis(horizontalInput)*5f, 0, Time.deltaTime * Input.GetAxis(verticalInput)*5f));
         }
 	}
 }
