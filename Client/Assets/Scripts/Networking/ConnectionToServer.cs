@@ -185,7 +185,7 @@ public class ConnectionToServer : MonoBehaviour {
 
 				NetworkIdentity netId = netComps[msg.sourceId];
 
-				msg.Apply(netId.transform);
+				netId.SendMessage("ApplyTransform", msg, SendMessageOptions.DontRequireReceiver);
 
 			} else if ((MessageId) buffer[0] ==  MessageId.Spawn) {
 				SpawnMessage msg = new SpawnMessage();
@@ -234,7 +234,7 @@ public class ConnectionToServer : MonoBehaviour {
 			buffer = new byte[length];
 			Read(ref buffer);		
 
-			Debug.Log("[" + sceneName + "] Received message id: " + (MessageId) buffer[0]);
+			// Debug.Log("[" + sceneName + "] Received message id: " + (MessageId) buffer[0]);
 
 			messageQueue.Enqueue(buffer);
 		}
