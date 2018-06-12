@@ -34,7 +34,7 @@ public class TransformMessage: NetworkMessage {
     }
 
     public void Apply(Transform t)
-    {       
+    {
         Vector3 v = new Vector3(position[0], position[1], position[2]);
         Quaternion q = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
         TransformUpdater.Instance.ApplyTransform(t, v, q );

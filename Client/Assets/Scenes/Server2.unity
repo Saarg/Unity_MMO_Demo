@@ -287,7 +287,7 @@ MonoBehaviour:
   port: 9502
   autoconnect: 0
   spawnablePrefabs:
-  - {fileID: 114455499308164740, guid: 3fd3096a580c14b108e5e881d184be08, type: 2}
+  - {fileID: 114284233523721722, guid: f409a5718a84e834db46be37787d924c, type: 2}
 --- !u!54 &1371720263
 Rigidbody:
   m_ObjectHideFlags: 0

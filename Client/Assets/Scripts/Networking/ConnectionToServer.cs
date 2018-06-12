@@ -119,7 +119,10 @@ public class ConnectionToServer : MonoBehaviour {
 
 	void Disconnect() {
 		foreach ( KeyValuePair<int, NetworkIdentity> netComp in netComps) {
-			netComp.Value.SendMessage("OnDisconnect", null, SendMessageOptions.DontRequireReceiver);
+            if (netComp.Value != null)
+            {
+                netComp.Value.SendMessage("OnDisconnect", null, SendMessageOptions.DontRequireReceiver);
+            }
 		}
 		netComps.Clear();
 
