@@ -14,4 +14,6 @@ public class NetworkComponent : MonoBehaviour {
 		netId = GetComponent<NetworkIdentity>();
 	}
 
+	public virtual void OnConnect(ConnectionToServer connection) {}
+	public virtual void OnDisconnect() {}
 }

@@ -39,6 +39,7 @@ public class ConnectionToServer : MonoBehaviour {
 			netComp.gameObject.SetActive(false);
 
 			netComp.id = idIndex++;
+			netComp.spawned = false;
 			netComps.Add(idIndex, netComp);
 		};
 
@@ -82,6 +83,7 @@ public class ConnectionToServer : MonoBehaviour {
 
 					SceneManager.MoveGameObjectToScene(player.gameObject, gameObject.scene);
 					player.id = msg.objectId;
+					player.spawned = true;
 
 					player.connectionToServer = this;
 
@@ -103,7 +105,9 @@ public class ConnectionToServer : MonoBehaviour {
 			gameObject.SetActive(false);
 		} else {
 			foreach ( KeyValuePair<int, NetworkIdentity> netComp in netComps) {
-				netComp.Value.gameObject.SetActive(true);
+				GameObject go = netComp.Value.gameObject;
+				go.SendMessage("OnConnect", this, SendMessageOptions.DontRequireReceiver);
+				go.SetActive(true);
 			}
 
 			StartCoroutine(MsgHandling());
@@ -115,8 +119,7 @@ public class ConnectionToServer : MonoBehaviour {
 
 	void Disconnect() {
 		foreach ( KeyValuePair<int, NetworkIdentity> netComp in netComps) {
-			if (netComp.Value != null)
-				Destroy(netComp.Value.gameObject);
+			netComp.Value.SendMessage("OnDisconnect", null, SendMessageOptions.DontRequireReceiver);
 		}
 		netComps.Clear();
 
@@ -192,6 +195,7 @@ public class ConnectionToServer : MonoBehaviour {
 				netComps.Add(msg.objectId, netId);
 
 				netId.id = msg.objectId;
+				netId.spawned = true;
 				netId.connectionToServer = this;
 				netId.hasAuthority = msg.hasAuthority;
 			} else if ((MessageId) buffer[0] ==  MessageId.Despawn) {
