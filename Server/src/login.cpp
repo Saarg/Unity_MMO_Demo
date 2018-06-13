@@ -75,6 +75,13 @@ void Login::Loop() {
             */
             char buffer[1024] = {0};
             read(clientSocket, buffer, 1024);
+
+            std::string str(buffer);
+            if (str.compare("hello from client") != 0) {
+                close(clientSocket);
+                continue;
+            }
+
             printf("%s %d \n", buffer, clientSocket);
 
             printf("New client added with id %d \n", clientSocket);
