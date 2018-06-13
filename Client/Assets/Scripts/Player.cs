@@ -9,6 +9,8 @@ public class Player : NetworkComponent {
 
     [Range(1f, 10f)]
     [SerializeField] float speed = 5f;
+    [Range(5f, 10f)]
+    [SerializeField] float interestRadius = 8f;
 
     [SerializeField] Animator animator;
 
@@ -49,5 +51,10 @@ public class Player : NetworkComponent {
         {
             animator.SetBool("isRunning", false);
         }
+    }
+
+    void OnDrawGizmos() {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, interestRadius);
     }
 }

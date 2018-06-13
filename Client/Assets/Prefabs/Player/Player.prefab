@@ -2184,6 +2184,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   updatePerSec: 10
+  maxMovement: 3
 --- !u!114 &114284233523721722
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2212,6 +2213,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   horizontalInput: Horizontal
   verticalInput: Vertical
+  speed: 5
+  interestRadius: 8
   animator: {fileID: 0}
 --- !u!136 &136854835910137164
 CapsuleCollider:

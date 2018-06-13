@@ -1,6 +1,8 @@
 #ifndef NETWORK_MESSAGE_HPP
 #define NETWORK_MESSAGE_HPP
 
+#include <sys/socket.h>
+
 class NetworkMessage {
     public:
         NetworkMessage(int id, int size): id(id), size(size) {

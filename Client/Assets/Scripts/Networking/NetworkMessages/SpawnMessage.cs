@@ -9,10 +9,7 @@ public class SpawnMessage: NetworkMessage {
     public int prefabId = -1;
     public int objectId = -1;
     public bool hasAuthority = false;
-
-    float[] position = new float[3];
-    float[] rotation = new float[4];
-
+    
     public SpawnMessage() {
         id = 2;
         size = 1 + 2 * sizeof(int) + sizeof(bool);

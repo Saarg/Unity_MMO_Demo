@@ -211,6 +211,18 @@ public class ConnectionToServer : MonoBehaviour {
 
 					Destroy(netComp.gameObject);
 				}
+			} else if ((MessageId) buffer[0] ==  MessageId.Enable) {
+				EnableMessage msg = new EnableMessage();
+				msg.Deserialize(ref buffer);
+
+				if (netComps.ContainsKey(msg.objectId)) {
+					NetworkIdentity netComp = netComps[msg.objectId];
+
+					netComp.transform.position = new Vector3(msg.position[0], msg.position[1], msg.position[2]);
+					netComp.transform.rotation = new Quaternion(msg.rotation[0], msg.rotation[1], msg.rotation[2], msg.rotation[3]);									
+
+					netComp.gameObject.SetActive(msg.toEnable);
+				}
 			}
 
 			yield return null;

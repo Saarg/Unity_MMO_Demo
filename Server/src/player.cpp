@@ -2,8 +2,8 @@
 
 #include "playerThread.hpp"
 
-Player::Player() {
-
+Player::Player(): playerSeen() {
+        
 }
 
 Player::~Player() {

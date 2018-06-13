@@ -7,6 +7,7 @@ public class NetworkTransform : NetworkComponent {
 	float lastUpdate;
 	[Range(0f, 30f)]
 	[SerializeField] float updatePerSec = 10f;
+	[SerializeField] float maxMovement = 3f;
 
 	float lastReception;
 
@@ -16,13 +17,12 @@ public class NetworkTransform : NetworkComponent {
 	Vector3 newPosition;
 	Quaternion newRotation;
 
-	// Use this for initialization
-	void Start () {
-		lastUpdate = Time.realtimeSinceStartup;
-
-		lastPosition = newPosition = transform.position;
+    public void OnEnable() {
+        lastPosition = newPosition = transform.position;
 		lastRotation = newRotation = transform.rotation;
-	}
+
+        lastReception = Time.realtimeSinceStartup;
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -60,7 +60,12 @@ public class NetworkTransform : NetworkComponent {
             Debug.Log("No animator found");
         }
 
-		lastReception = Time.realtimeSinceStartup;
+        Vector3 movmntVec = newPosition - lastPosition;
+        if (movmntVec.sqrMagnitude > maxMovement*maxMovement) {
+            lastReception = 0;
+        } else {
+		    lastReception = Time.realtimeSinceStartup;
+        }
     }
 
     private void UpdateAnimator(Animator animator, Vector3 lastPosition, Vector3 newPosition)

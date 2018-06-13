@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "NetworkMessages/despawnMessage.hpp"
+#include "NetworkMessages/enableMessage.hpp"
 #include "NetworkMessages/spawnMessage.hpp"
 #include "NetworkMessages/transformMessage.hpp"
 
@@ -32,7 +33,7 @@ void Game::Spawn(int prefabId, int owner, bool hasAuthority) {
 
 void Game::SpawnPlayer(int clientSocket) {
     // Init player
-    players[clientSocket] = Player();
+    Player& p1 = players[clientSocket] = Player();
 
     // Sending spawn message to all clients including myself
     SpawnMessage msg;
@@ -62,6 +63,38 @@ void Game::SpawnPlayer(int clientSocket) {
         msg2.objectId = *it;
 
         msg2.Send(clientSocket);
+
+        Player& p2 = players[*it];                    
+        float distVector[3] = {p1.position[0], p1.position[1], p1.position[2]};
+
+        distVector[0] -= p2.position[0];
+        distVector[1] -= p2.position[1];
+        distVector[2] -= p2.position[2];
+
+        float sqrMagnitude = distVector[0]*distVector[0] + distVector[1]*distVector[1] + distVector[2]*distVector[2];
+        float sqrRadius = p1.interestRadius*p1.interestRadius;
+
+        if (sqrMagnitude > sqrRadius) { // Player not in interest radius
+            EnableMessage emsg;
+            emsg.objectId = *it;
+            emsg.toEnable = false;
+
+            emsg.position[0] = p2.position[0];
+            emsg.position[1] = p2.position[1];
+            emsg.position[2] = p2.position[2];
+            
+            emsg.rotation[0] = p2.rotation[0];
+            emsg.rotation[1] = p2.rotation[1];
+            emsg.rotation[2] = p2.rotation[2];
+            emsg.rotation[3] = p2.rotation[3];
+
+            p1.playerSeen.erase(*it);
+
+            emsg.Send(clientSocket);
+
+            emsg.objectId = clientSocket;
+            emsg.Send(*it);            
+        }
     }
 
     // Player can now be seen by others
@@ -104,27 +137,77 @@ void Game::Loop() {
 
         // Server tick start.
         for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
-            Player& p = players[*it];
+            Player& p1 = players[*it];
 
-            if (p.posDirty) {
-                p.posDirty = false;
+            if (p1.posDirty) {
+                p1.posDirty = false;
 
                 TransformMessage msg;
                 msg.sourceId = *it;
-                msg.position[0] = p.position[0];
-                msg.position[1] = p.position[1];
-                msg.position[2] = p.position[2];
+                msg.position[0] = p1.position[0];
+                msg.position[1] = p1.position[1];
+                msg.position[2] = p1.position[2];
 
-                msg.rotation[0] = p.rotation[0];
-                msg.rotation[1] = p.rotation[1];
-                msg.rotation[2] = p.rotation[2];
-                msg.rotation[3] = p.rotation[3];
+                msg.rotation[0] = p1.rotation[0];
+                msg.rotation[1] = p1.rotation[1];
+                msg.rotation[2] = p1.rotation[2];
+                msg.rotation[3] = p1.rotation[3];
 
                 for (std::vector<int>::iterator jt = clients.begin(); jt != clients.end(); jt++) {
                     if (*it == *jt)
                         continue;
+                    
+                    Player& p2 = players[*jt];                    
+                    float distVector[3] = {p2.position[0], p2.position[1], p2.position[2]};
 
-                    msg.Send(*jt);
+                    distVector[0] -= p1.position[0];
+                    distVector[1] -= p1.position[1];
+                    distVector[2] -= p1.position[2];
+
+                    float sqrMagnitude = distVector[0]*distVector[0] + distVector[1]*distVector[1] + distVector[2]*distVector[2];
+                    float sqrRadius = p2.interestRadius*p2.interestRadius;
+
+                    if (sqrMagnitude > sqrRadius) { // Player not in interest radius
+                        if (p2.playerSeen.count(*it) != 0) {
+                            EnableMessage emsg;
+                            emsg.objectId = *it;
+                            emsg.toEnable = false;
+
+                            emsg.position[0] = p1.position[0];
+                            emsg.position[1] = p1.position[1];
+                            emsg.position[2] = p1.position[2];
+                            
+                            emsg.rotation[0] = p1.rotation[0];
+                            emsg.rotation[1] = p1.rotation[1];
+                            emsg.rotation[2] = p1.rotation[2];
+                            emsg.rotation[3] = p1.rotation[3];
+
+                            p2.playerSeen.erase(*it);
+
+                            emsg.Send(*jt);
+                        }
+                    } else { // Player in interest radius
+                        if (p2.playerSeen.count(*it) == 0) {
+                            EnableMessage emsg;
+                            emsg.objectId = *it;
+                            emsg.toEnable = true;
+
+                            emsg.position[0] = p1.position[0];
+                            emsg.position[1] = p1.position[1];
+                            emsg.position[2] = p1.position[2];
+                            
+                            emsg.rotation[0] = p1.rotation[0];
+                            emsg.rotation[1] = p1.rotation[1];
+                            emsg.rotation[2] = p1.rotation[2];
+                            emsg.rotation[3] = p1.rotation[3];
+
+                            p2.playerSeen[*it] = &p1;
+
+                            emsg.Send(*jt);                            
+                        } else {
+                            msg.Send(*jt);
+                        }
+                    }
                 }  
             }
         }
