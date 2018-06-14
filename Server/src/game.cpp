@@ -1,5 +1,4 @@
 #include "game.hpp"
-#include <stdio.h>
 
 #include "NetworkMessages/despawnMessage.hpp"
 #include "NetworkMessages/enableMessage.hpp"
@@ -9,8 +8,22 @@
 #include "player.hpp"
 #include "playerThread.hpp"
 
-Game::Game(std::vector<int>& clients, std::map<int, Player>& players): clients(clients), players(players) {
+Game::Game(int serverId, std::vector<int>& clients, std::map<int, Server>&  servers, std::map<int, Player>& players): serverId(serverId), clients(clients), servers(servers), players(players) {
+    if (serverId == 9501) {
+        x = -20;
+        y = 0;
 
+        size_x = 39;
+        size_y = 40;
+        size_z = 39;
+    } else if (serverId == 9502) {
+        x = 20;
+        y = 0;
+
+        size_x = 39;
+        size_y = 40;
+        size_z = 39;
+    }
 }
 
 void Game::Run() { 
@@ -129,6 +142,12 @@ void Game::DespawnPlayer(int clientSocket) {
     }
 
     close(clientSocket);
+}
+
+void Game::RegisterServer(int id, int serverSocket) {
+    std::cout << "New server added with id " << id << " on socket " << serverSocket << std::endl;
+
+    servers[id] = Server(id, serverSocket);
 }
 
 void Game::Loop() {

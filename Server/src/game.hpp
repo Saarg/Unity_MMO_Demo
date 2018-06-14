@@ -17,22 +17,27 @@
 #include <string.h>
 
 #include "player.hpp"
+#include "server.hpp"
 
 class Game {
     public:
-        Game(std::vector<int>& clients, std::map<int, Player>& players);
+        Game(int serverId, std::vector<int>& clients, std::map<int, Server>& servers, std::map<int, Player>& players);
 
         void Run();
 
         void Spawn(int prefabId, int owner, bool hasAuthority = false);
         void SpawnPlayer(int client);
         void Despawn(int objectId);
-        void DespawnPlayer(int clientSocket);        
+        void DespawnPlayer(int clientSocket);
+
+        void RegisterServer(int id, int serverSocket);
 
     private:
         void Loop();
 
         std::thread* loop;
+
+        int serverId;
 
         float x = 0;
         float y = 0;
@@ -42,6 +47,7 @@ class Game {
         float size_z = 10;
 
         std::vector<int>& clients;
+        std::map<int, Server>& servers;
         std::map<int, Player>& players;
 
         int lastValidId = 10000;

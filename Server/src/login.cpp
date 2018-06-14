@@ -2,8 +2,8 @@
 
 #include "NetworkMessages/spawnMessage.hpp"
 
-Login::Login(int const port, std::vector<int>& clients, std::map<int, Player>& players, Game& game): 
-        clients(clients), players(players), game(game) {
+Login::Login(int const port, Game& game): 
+        game(game) {
     /* 
      * AF_INET => IPv4 || AF_INET6 => IPv6
      * SOCK_STREAM: TCP || SOCK_DGRAM: UDP
@@ -73,19 +73,21 @@ void Login::Loop() {
             *  Read buffer send by client
             *  Send id
             */
-            char buffer[1024] = {0};
-            read(clientSocket, buffer, 1024);
+            int socketType;
+            read(clientSocket, &socketType, sizeof(int));
 
-            std::string str(buffer);
-            if (str.compare("hello from client") != 0) {
+            if (socketType == 0) {
+                printf("New client added with id %d \n", clientSocket);
+                game.SpawnPlayer(clientSocket);
+            } else if (socketType == 1) {
+                int id;
+                read(clientSocket, &id, sizeof(int));
+                                
+                game.RegisterServer(id, clientSocket);
+            } else {
                 close(clientSocket);
                 continue;
             }
-
-            printf("%s %d \n", buffer, clientSocket);
-
-            printf("New client added with id %d \n", clientSocket);
-            game.SpawnPlayer(clientSocket);  
         }
     }
 }

@@ -18,7 +18,7 @@
 
 class Login {
     public:
-        Login(int const port, std::vector<int>& clients, std::map<int, Player>& players, Game& game);
+        Login(int const port, Game& game);
 
         void Run();
         void Loop();
@@ -28,9 +28,6 @@ class Login {
         struct sockaddr_in address;
 
         std::thread* loop;
-
-        std::vector<int>& clients;
-        std::map<int, Player>& players;
 
         Game& game;
 };
