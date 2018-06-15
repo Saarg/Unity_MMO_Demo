@@ -190,8 +190,13 @@ public class ConnectionToServer : MonoBehaviour {
 				SpawnMessage msg = new SpawnMessage();
 				msg.Deserialize(ref buffer);
 
+				if (netComps.ContainsKey(msg.objectId)) {
+					continue;
+				}
+
 				GameObject spawned = Instantiate(spawnablePrefabs[msg.prefabId].gameObject, transform.position, transform.rotation);
 				SceneManager.MoveGameObjectToScene(spawned, gameObject.scene);
+				spawned.SetActive(msg.hasAuthority);
 
 				NetworkIdentity netId = spawned.GetComponent<NetworkIdentity>();
 				netComps.Add(msg.objectId, netId);

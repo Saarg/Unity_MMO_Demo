@@ -2214,7 +2214,7 @@ MonoBehaviour:
   horizontalInput: Horizontal
   verticalInput: Vertical
   speed: 5
-  interestRadius: 8
+  interestRadius: 10
   animator: {fileID: 0}
 --- !u!136 &136854835910137164
 CapsuleCollider:

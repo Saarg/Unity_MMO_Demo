@@ -32,6 +32,7 @@ class Game {
         void DespawnPlayer(int clientSocket);
 
         void SendMsgTo(NetworkMessage* msg, int targetId);
+        void SendMsgTo(NetworkMessage* msg, Player& target);
         void SendMsgToAllInterested(NetworkMessage* msg, Player* p1);
         void SendMsgToAllNotInterested(NetworkMessage* msg, Player* p1);        
         void SendMsgToAll(NetworkMessage* msg, Player* p1 = NULL, bool interestedOnly = true);

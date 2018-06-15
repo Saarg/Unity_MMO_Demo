@@ -20,6 +20,8 @@ class Server {
 
         void MsgReception();
 
+        void SpawnFor(Player& p);
+
         void AddPlayer(int index, bool withMsg = true);
         void RemovePlayer(int index, bool withMsg = true);
         inline bool ContainsPlayer(int index) { return players->count(index) != 0; }

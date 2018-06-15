@@ -103,6 +103,10 @@ void Game::SpawnPlayer(int clientSocket) {
 
     players[clientSocket].pthread = new PlayerThread(clientSocket, players[clientSocket], *this);
     players[clientSocket].pthread->Run();
+
+    for (std::map<int, Server*>::iterator it=servers.begin(); it!=servers.end(); it++) {
+        it->second->SpawnFor(players[clientSocket]);
+    }
 }
 
 void Game::Despawn(int objectId) {
@@ -132,12 +136,20 @@ void Game::DespawnPlayer(int clientSocket) {
     close(clientSocket);
 
     for (std::map<int, Server*>::iterator it=servers.begin(); it!=servers.end(); it++) {
+        it->second->RemovePlayer(clientSocket, false);
         msg.Send(it->second->GetSocket());
     }
 }
 
 void Game::SendMsgTo(NetworkMessage* msg, int targetId) {
     int socket = players[targetId].pthread->GetSocket();
+
+    if (socket > 0)
+        msg->Send(socket);
+}
+
+void Game::SendMsgTo(NetworkMessage* msg, Player& target) {
+    int socket = target.pthread->GetSocket();
 
     if (socket > 0)
         msg->Send(socket);

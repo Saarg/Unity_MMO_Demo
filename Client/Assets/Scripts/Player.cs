@@ -9,7 +9,7 @@ public class Player : NetworkComponent {
 
     [Range(1f, 10f)]
     [SerializeField] float speed = 5f;
-    [Range(5f, 10f)]
+    [Range(5f, 20f)]
     [SerializeField] float interestRadius = 8f;
 
     [SerializeField] Animator animator;

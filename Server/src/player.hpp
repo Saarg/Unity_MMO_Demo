@@ -24,7 +24,7 @@ class Player {
         float position[3];
         float rotation[4];
 
-        float interestRadius = 8;
+        float interestRadius = 10;
         std::map<int, Player*> playerSeen;
 };
 

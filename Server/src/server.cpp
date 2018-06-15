@@ -84,7 +84,7 @@ void Server::MsgReception() {
             msg.sourceId = -msg.sourceId;
 
             if (players->count(msg.sourceId) == 0)  {
-                std::cout << "Player " << msg.sourceId << " from server " << this->id << " entered the border" << std::endl;
+                std::cout << "Player " << -msg.sourceId << " from server " << this->id << " entered the border" << std::endl;
 
                 AddPlayer(msg.sourceId);
             }
@@ -98,13 +98,28 @@ void Server::MsgReception() {
             msg.objectId = -msg.objectId;
 
             if (players->count(msg.objectId) != 0)  {            
-                std::cout << "Player " << msg.objectId << " from server " << this->id << " left the border" << std::endl;
+                std::cout << "Player " << -msg.objectId << " from server " << this->id << " left the border" << std::endl;
 
                 RemovePlayer(msg.objectId);
             }
         }
 
         std::this_thread::sleep_for (std::chrono::milliseconds(10));
+    }
+}
+
+void Server::SpawnFor(Player& p1) {
+    for (std::map<int, Player>::iterator it=players->begin(); it!=players->end(); it++) {
+        int id = it->first;
+        // Player& p = it->second;
+
+        SpawnMessage spawnMsg;
+        spawnMsg.prefabId = 0;
+        spawnMsg.objectId = id;
+        spawnMsg.hasAuthority = false;
+
+        // Send Spawn
+        game->SendMsgTo(&spawnMsg, p1);
     }
 }
 
