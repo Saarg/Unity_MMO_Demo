@@ -2,7 +2,7 @@
 
 #include "playerThread.hpp"
 
-Player::Player(): playerSeen() {
+Player::Player(int id): id(id), playerSeen() {
         
 }
 

@@ -5,6 +5,8 @@
 #include "game.hpp"
 #include "NetworkMessages/transformMessage.hpp"
 #include "NetworkMessages/spawnMessage.hpp"
+#include "NetworkMessages/despawnMessage.hpp"
+#include "NetworkMessages/enableMessage.hpp"
 
 Server::Server(int id, int socket, Game* game): id(id), socket(socket), game(game), players() {
     if (id == 9501) {
@@ -82,25 +84,73 @@ void Server::MsgReception() {
             msg.sourceId = -msg.sourceId;
 
             if (players->count(msg.sourceId) == 0)  {
-                std::cout << "Player from server " << this->id << " entered the border" << std::endl;
-                players->insert(std::pair<int,Player>(msg.sourceId, Player()));
-                Player& p = players->at(msg.sourceId);
+                std::cout << "Player " << msg.sourceId << " from server " << this->id << " entered the border" << std::endl;
 
-                p.Deserialize(buffer, 1 + sizeof(int));
-
-                SpawnMessage spawnMsg;
-                spawnMsg.prefabId = 0;
-                spawnMsg.objectId = msg.sourceId;
-                spawnMsg.hasAuthority = false;
-
-                // Send Spawn
-                game->SendMsgToAll(&spawnMsg);
+                AddPlayer(msg.sourceId);
             }
 
             players->at(msg.sourceId).Deserialize(buffer, 1 + sizeof(int));
             players->at(msg.sourceId).posDirty = true;
+        } else if (id == 3) {
+            DespawnMessage msg;
+            msg.Deserialize(buffer);
+
+            msg.objectId = -msg.objectId;
+
+            if (players->count(msg.objectId) != 0)  {            
+                std::cout << "Player " << msg.objectId << " from server " << this->id << " left the border" << std::endl;
+
+                RemovePlayer(msg.objectId);
+            }
         }
 
         std::this_thread::sleep_for (std::chrono::milliseconds(10));
     }
+}
+
+void Server::AddPlayer(int index, bool withMsg) {
+    players->insert(std::pair<int,Player>(index, Player(index)));
+
+    if (socket <= 0 || !withMsg)
+        return;
+
+    SpawnMessage spawnMsg;
+    spawnMsg.prefabId = 0;
+    spawnMsg.objectId = index;
+    spawnMsg.hasAuthority = false;
+
+    // Send Spawn
+    game->SendMsgToAll(&spawnMsg);
+
+    Player& p = players->at(index);
+
+    EnableMessage emsg;
+    emsg.objectId = index;
+    emsg.toEnable = false;
+
+    emsg.position[0] = p.position[0];
+    emsg.position[1] = p.position[1];
+    emsg.position[2] = p.position[2];
+
+    emsg.rotation[0] = p.rotation[0];
+    emsg.rotation[1] = p.rotation[1];
+    emsg.rotation[2] = p.rotation[2];
+    emsg.rotation[3] = p.rotation[3];
+
+    game->SendMsgToAllNotInterested(&emsg, &p);  
+}
+
+
+void Server::RemovePlayer(int index, bool withMsg) {
+    players->erase(index);
+
+    if (socket <= 0 || !withMsg)
+        return;
+
+    DespawnMessage despawnMsg;
+
+    despawnMsg.objectId = index;
+
+    // Send Despawn
+    game->SendMsgToAll(&despawnMsg);
 }

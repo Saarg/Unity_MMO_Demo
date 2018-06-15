@@ -152,7 +152,7 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 19, y: 20, z: 19}
+  m_Size: {x: 39, y: 20, z: 39}
   m_Center: {x: 0, y: 5, z: 0}
 --- !u!1 &1156388342
 GameObject:
@@ -235,8 +235,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1156388342}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalPosition: {x: -20, y: 0, z: 0}
+  m_LocalScale: {x: 4, y: 4, z: 4}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
@@ -265,7 +265,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1371720260}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10, y: 0, z: 0}
+  m_LocalPosition: {x: -20, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 893235966}
@@ -283,8 +283,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c36cec47046d44efebed170c21c51764, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ip: 51.15.247.163
-  port: 80
+  ip: localhost
+  port: 9501
   autoconnect: 1
   spawnablePrefabs:
   - {fileID: 114284233523721722, guid: f409a5718a84e834db46be37787d924c, type: 2}

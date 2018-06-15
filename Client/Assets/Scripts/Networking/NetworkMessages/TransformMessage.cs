@@ -27,10 +27,10 @@ public class TransformMessage: NetworkMessage {
         position [1] = t.position.y;
         position [2] = t.position.z;
 
-        rotation [0] = t.rotation.w;
-        rotation [1] = t.rotation.x;
-        rotation [2] = t.rotation.y;
-        rotation [3] = t.rotation.z;
+        rotation [0] = t.rotation.x;
+        rotation [1] = t.rotation.y;
+        rotation [2] = t.rotation.z;
+        rotation [3] = t.rotation.w;
     }
 
 	public override void Deserialize(ref byte[] buffer) {

@@ -9,7 +9,7 @@ PlayerThread::PlayerThread(int client, Player& player, Game& game): client(clien
 }
 
 PlayerThread::~PlayerThread() {
-    std::cout << "Client " << client << "'s thread dying" << std::endl;
+    
 }
 
 void PlayerThread::Run() { 
@@ -58,5 +58,6 @@ void PlayerThread::Loop() {
         std::this_thread::sleep_for (std::chrono::milliseconds(10));
     }
 
+    std::cout << "Client " << client << "'s thread dying" << std::endl;
     delete this;
 }

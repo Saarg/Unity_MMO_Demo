@@ -34,7 +34,7 @@ void Game::Spawn(int prefabId, int owner, bool hasAuthority) {
 
 void Game::SpawnPlayer(int clientSocket) {
     // Init player
-    Player& p1 = players[clientSocket] = Player();
+    Player& p1 = players[clientSocket] = Player(clientSocket);
 
     // Sending spawn message to all clients including myself
     SpawnMessage msg;
@@ -130,6 +130,10 @@ void Game::DespawnPlayer(int clientSocket) {
     }
 
     close(clientSocket);
+
+    for (std::map<int, Server*>::iterator it=servers.begin(); it!=servers.end(); it++) {
+        msg.Send(it->second->GetSocket());
+    }
 }
 
 void Game::SendMsgTo(NetworkMessage* msg, int targetId) {
@@ -157,6 +161,8 @@ void Game::SendMsgToAll(NetworkMessage* msg, Player* p1, bool interestedOnly) {
             continue;
         }
 
+        int p1Id = p1->id;
+
         float distVector[3] = {p2.position[0], p2.position[1], p2.position[2]};
 
         distVector[0] -= p1->position[0];
@@ -166,10 +172,48 @@ void Game::SendMsgToAll(NetworkMessage* msg, Player* p1, bool interestedOnly) {
         float sqrMagnitude = distVector[0]*distVector[0] + distVector[1]*distVector[1] + distVector[2]*distVector[2];
         float sqrRadius = p2.interestRadius*p2.interestRadius;
 
-        if (sqrMagnitude <= sqrRadius and interestedOnly) {
-            SendMsgTo(msg, id);
-        } else if (sqrMagnitude > sqrRadius && !interestedOnly) {
-            SendMsgTo(msg, id);
+        if (sqrMagnitude > sqrRadius) { // Player not in interest radius
+            if (p2.playerSeen.count(p1Id) != 0) {
+                EnableMessage emsg;
+                emsg.objectId = p1Id;
+                emsg.toEnable = false;
+
+                emsg.position[0] = p1->position[0];
+                emsg.position[1] = p1->position[1];
+                emsg.position[2] = p1->position[2];
+                
+                emsg.rotation[0] = p1->rotation[0];
+                emsg.rotation[1] = p1->rotation[1];
+                emsg.rotation[2] = p1->rotation[2];
+                emsg.rotation[3] = p1->rotation[3];
+
+                p2.playerSeen.erase(p1Id);
+                SendMsgTo(&emsg, id);                                   
+            }
+
+            if (!interestedOnly)
+                SendMsgTo(msg, id);
+        } else { // Player in interest radius
+            if (p2.playerSeen.count(p1Id) == 0) {
+                EnableMessage emsg;
+                emsg.objectId = p1Id;
+                emsg.toEnable = true;
+
+                emsg.position[0] = p1->position[0];
+                emsg.position[1] = p1->position[1];
+                emsg.position[2] = p1->position[2];
+                
+                emsg.rotation[0] = p1->rotation[0];
+                emsg.rotation[1] = p1->rotation[1];
+                emsg.rotation[2] = p1->rotation[2];
+                emsg.rotation[3] = p1->rotation[3];
+
+                p2.playerSeen[p1Id] = p1;
+                SendMsgTo(&emsg, id);                   
+            }
+
+            if (interestedOnly)
+                SendMsgTo(msg, id);
         }
     }
 }
@@ -177,6 +221,10 @@ void Game::SendMsgToAll(NetworkMessage* msg, Player* p1, bool interestedOnly) {
 void Game::RegisterServer(int id, int serverSocket) {
     std::cout << "New server added with id " << id << " on socket " << serverSocket << std::endl;
     
+    while (servers.count(id) != 0) {
+        servers.erase(id);
+    }
+
     servers[id] = new Server(id, serverSocket, this);
 }
 
@@ -262,10 +310,34 @@ void Game::Loop() {
                 }  
 
                 // Update for borders
-                if (p1.position[0] + p1.interestRadius > server.X() + server.Size_x()/2 and server.Id() == 9501 and servers.count(9502) != 0) {
-                    msg.Send(servers[9502]->GetSocket());
-                } else if (p1.position[0] - p1.interestRadius < server.X() - server.Size_x()/2 and server.Id() == 9502 and servers.count(9501) != 0) {
-                    msg.Send(servers[9501]->GetSocket());                    
+                if (server.Id() == 9501 and servers.count(9502) != 0) {
+                    Server* s = servers[9502];
+
+                    if (p1.position[0] + p1.interestRadius > server.X() + server.Size_x()/2) {
+                        msg.Send(s->GetSocket());
+
+                        s->AddPlayer(p1Id, false);
+                    } else if(s->ContainsPlayer(p1Id)) {
+                        DespawnMessage msg;
+                        msg.objectId = p1Id;
+                        msg.Send(s->GetSocket());
+
+                        s->RemovePlayer(p1Id, false);
+                    }
+                } else if(server.Id() == 9502 and servers.count(9501) != 0) {                
+                        Server* s = servers[9501];
+
+                    if (p1.position[0] - p1.interestRadius < server.X() - server.Size_x()/2) {
+                        msg.Send(s->GetSocket());
+
+                        s->AddPlayer(p1Id, false);                  
+                    } else {
+                        DespawnMessage msg;
+                        msg.objectId = p1Id;
+                        msg.Send(s->GetSocket());
+
+                        s->RemovePlayer(p1Id, false);
+                    }
                 }
             }
         }

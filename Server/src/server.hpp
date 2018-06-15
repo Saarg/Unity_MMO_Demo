@@ -20,6 +20,10 @@ class Server {
 
         void MsgReception();
 
+        void AddPlayer(int index, bool withMsg = true);
+        void RemovePlayer(int index, bool withMsg = true);
+        inline bool ContainsPlayer(int index) { return players->count(index) != 0; }
+
     private:
         int id;
         int socket;

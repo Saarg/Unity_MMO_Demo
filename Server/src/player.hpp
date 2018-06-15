@@ -7,13 +7,15 @@ class PlayerThread;
 
 class Player {
     public:
-        Player();
+        Player(int id = 0);
         ~Player();
 
         short Serialize(char* buffer, short offset);
         short Deserialize(char* buffer, short offset);
 
         int GetSocket();
+
+        int id = 0;
 
         PlayerThread* pthread;        
 

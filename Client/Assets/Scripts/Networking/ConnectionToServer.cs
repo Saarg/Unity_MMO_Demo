@@ -21,7 +21,7 @@ public class ConnectionToServer : MonoBehaviour {
 
 	[SerializeField] List<NetworkIdentity> spawnablePrefabs;
 	[SerializeField] Dictionary<int, NetworkIdentity> netComps = new Dictionary<int, NetworkIdentity>();
-	int idIndex = 1;
+	int idIndex = 10000;
 
 	Thread msgReceiveThread;
 
@@ -62,8 +62,7 @@ public class ConnectionToServer : MonoBehaviour {
 
 		if(socket.Connected)
 		{
-			byte[] hello = Encoding.UTF8.GetBytes("hello from client");
-			socket.Send(hello, SocketFlags.None);
+			socket.Send(BitConverter.GetBytes(0), SocketFlags.None);
 
 			byte[] buffer = new byte[sizeof(int)];
 			Read(ref buffer);
@@ -191,7 +190,7 @@ public class ConnectionToServer : MonoBehaviour {
 				SpawnMessage msg = new SpawnMessage();
 				msg.Deserialize(ref buffer);
 
-				GameObject spawned = Instantiate(spawnablePrefabs[msg.prefabId].gameObject);
+				GameObject spawned = Instantiate(spawnablePrefabs[msg.prefabId].gameObject, transform.position, transform.rotation);
 				SceneManager.MoveGameObjectToScene(spawned, gameObject.scene);
 
 				NetworkIdentity netId = spawned.GetComponent<NetworkIdentity>();
