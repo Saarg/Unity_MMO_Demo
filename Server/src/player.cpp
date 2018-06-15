@@ -49,3 +49,7 @@ short Player::Deserialize(char* buffer, short offset) {
 
     return offset;
 }
+
+int Player::GetSocket() { 
+    return pthread != NULL ? pthread->GetSocket() : 0;
+}

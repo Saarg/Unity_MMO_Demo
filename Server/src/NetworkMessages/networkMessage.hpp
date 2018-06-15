@@ -13,8 +13,8 @@ class NetworkMessage {
             delete[] buffer;
         }
 
-        virtual char* Serialize() = 0;
-        virtual void Deserialize(char* buffer) = 0;
+        virtual char* Serialize() { return nullptr; }
+        virtual void Deserialize(char* buffer) {  }
 
         inline void Send(int socket) { send(socket, Serialize(), size + sizeof(int), 0); }
 

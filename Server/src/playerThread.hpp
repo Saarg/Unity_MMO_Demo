@@ -23,6 +23,8 @@ class PlayerThread {
         PlayerThread(int client, Player& player, Game& game);
         ~PlayerThread();
 
+        int GetSocket() { return client; }
+
         void Run();
 
         bool running = false;

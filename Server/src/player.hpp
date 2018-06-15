@@ -13,9 +13,11 @@ class Player {
         short Serialize(char* buffer, short offset);
         short Deserialize(char* buffer, short offset);
 
+        int GetSocket();
+
         PlayerThread* pthread;        
 
-        bool posDirty;
+        bool posDirty = false;
 
         float position[3];
         float rotation[4];

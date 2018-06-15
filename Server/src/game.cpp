@@ -8,22 +8,10 @@
 #include "player.hpp"
 #include "playerThread.hpp"
 
-Game::Game(int serverId, std::vector<int>& clients, std::map<int, Server>&  servers, std::map<int, Player>& players): serverId(serverId), clients(clients), servers(servers), players(players) {
-    if (serverId == 9501) {
-        x = -20;
-        y = 0;
-
-        size_x = 39;
-        size_y = 40;
-        size_z = 39;
-    } else if (serverId == 9502) {
-        x = 20;
-        y = 0;
-
-        size_x = 39;
-        size_y = 40;
-        size_z = 39;
-    }
+Game::Game(int serverId, std::vector<int>& clients, std::map<int, Server*>&  servers, std::map<int, Player>& players): 
+    server(serverId, 0), clients(clients), servers(servers), players(players) {
+    
+    server.SetPlayers(&players);
 }
 
 void Game::Run() { 
@@ -144,10 +132,52 @@ void Game::DespawnPlayer(int clientSocket) {
     close(clientSocket);
 }
 
+void Game::SendMsgTo(NetworkMessage* msg, int targetId) {
+    int socket = players[targetId].pthread->GetSocket();
+
+    if (socket > 0)
+        msg->Send(socket);
+}
+
+void Game::SendMsgToAllInterested(NetworkMessage* msg, Player* p1) {
+    SendMsgToAll(msg, p1);
+}
+
+void Game::SendMsgToAllNotInterested(NetworkMessage* msg, Player* p1) {
+    SendMsgToAll(msg, p1, false);
+}
+
+void Game::SendMsgToAll(NetworkMessage* msg, Player* p1, bool interestedOnly) {
+    for (std::map<int, Player>::iterator it=players.begin(); it!=players.end(); it++) {
+        int id = it->first;
+        Player& p2 = it->second;
+
+        if (p1 == NULL) {
+            SendMsgTo(msg, id);
+            continue;
+        }
+
+        float distVector[3] = {p2.position[0], p2.position[1], p2.position[2]};
+
+        distVector[0] -= p1->position[0];
+        distVector[1] -= p1->position[1];
+        distVector[2] -= p1->position[2];
+
+        float sqrMagnitude = distVector[0]*distVector[0] + distVector[1]*distVector[1] + distVector[2]*distVector[2];
+        float sqrRadius = p2.interestRadius*p2.interestRadius;
+
+        if (sqrMagnitude <= sqrRadius and interestedOnly) {
+            SendMsgTo(msg, id);
+        } else if (sqrMagnitude > sqrRadius && !interestedOnly) {
+            SendMsgTo(msg, id);
+        }
+    }
+}
+
 void Game::RegisterServer(int id, int serverSocket) {
     std::cout << "New server added with id " << id << " on socket " << serverSocket << std::endl;
-
-    servers[id] = Server(id, serverSocket);
+    
+    servers[id] = new Server(id, serverSocket, this);
 }
 
 void Game::Loop() {
@@ -155,14 +185,16 @@ void Game::Loop() {
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
 
         // Server tick start.
-        for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
-            Player& p1 = players[*it];
+        for (std::map<int, Player>::iterator it=players.begin(); it!=players.end(); it++) {
+            int p1Id = it->first;
+            Player& p1 = it->second;
 
+            // Update dirty pos
             if (p1.posDirty) {
                 p1.posDirty = false;
 
                 TransformMessage msg;
-                msg.sourceId = *it;
+                msg.sourceId = p1Id;
                 msg.position[0] = p1.position[0];
                 msg.position[1] = p1.position[1];
                 msg.position[2] = p1.position[2];
@@ -173,7 +205,7 @@ void Game::Loop() {
                 msg.rotation[3] = p1.rotation[3];
 
                 for (std::vector<int>::iterator jt = clients.begin(); jt != clients.end(); jt++) {
-                    if (*it == *jt)
+                    if (p1Id == *jt)
                         continue;
                     
                     Player& p2 = players[*jt];                    
@@ -187,9 +219,9 @@ void Game::Loop() {
                     float sqrRadius = p2.interestRadius*p2.interestRadius;
 
                     if (sqrMagnitude > sqrRadius) { // Player not in interest radius
-                        if (p2.playerSeen.count(*it) != 0) {
+                        if (p2.playerSeen.count(p1Id) != 0) {
                             EnableMessage emsg;
-                            emsg.objectId = *it;
+                            emsg.objectId = p1Id;
                             emsg.toEnable = false;
 
                             emsg.position[0] = p1.position[0];
@@ -201,14 +233,14 @@ void Game::Loop() {
                             emsg.rotation[2] = p1.rotation[2];
                             emsg.rotation[3] = p1.rotation[3];
 
-                            p2.playerSeen.erase(*it);
+                            p2.playerSeen.erase(p1Id);
 
                             emsg.Send(*jt);
                         }
                     } else { // Player in interest radius
-                        if (p2.playerSeen.count(*it) == 0) {
+                        if (p2.playerSeen.count(p1Id) == 0) {
                             EnableMessage emsg;
-                            emsg.objectId = *it;
+                            emsg.objectId = p1Id;
                             emsg.toEnable = true;
 
                             emsg.position[0] = p1.position[0];
@@ -220,7 +252,7 @@ void Game::Loop() {
                             emsg.rotation[2] = p1.rotation[2];
                             emsg.rotation[3] = p1.rotation[3];
 
-                            p2.playerSeen[*it] = &p1;
+                            p2.playerSeen[p1Id] = &p1;
 
                             emsg.Send(*jt);                            
                         } else {
@@ -228,7 +260,18 @@ void Game::Loop() {
                         }
                     }
                 }  
+
+                // Update for borders
+                if (p1.position[0] + p1.interestRadius > server.X() + server.Size_x()/2 and server.Id() == 9501 and servers.count(9502) != 0) {
+                    msg.Send(servers[9502]->GetSocket());
+                } else if (p1.position[0] - p1.interestRadius < server.X() - server.Size_x()/2 and server.Id() == 9502 and servers.count(9501) != 0) {
+                    msg.Send(servers[9501]->GetSocket());                    
+                }
             }
+        }
+
+        for (std::map<int, Server*>::iterator it=servers.begin(); it!=servers.end(); it++) {
+            it->second->Update();
         }
         // Server tick end.     
     }

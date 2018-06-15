@@ -30,8 +30,8 @@ void PlayerThread::Loop() {
         short id = buffer[0];
         
         if (id == 1) {
-            player.posDirty = true;
-            player.Deserialize(buffer, 1 + sizeof(int));   
+            player.Deserialize(buffer, 1 + sizeof(int));
+            player.posDirty = true;            
         } else if (id == 2) {
             SpawnMessage msg;
             msg.Deserialize(buffer);

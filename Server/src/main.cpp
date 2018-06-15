@@ -6,7 +6,7 @@
 #include "server.hpp"
 
 std::vector<int> clients;
-std::map<int, Server> servers;
+std::map<int, Server*> servers;
 std::map<int, Player> players;
 
 int main(int argc, char const *argv[])
@@ -43,7 +43,7 @@ int main(int argc, char const *argv[])
                 int socketType[2] = {1, curId};
                 send(sockfd, &socketType, 2*sizeof(int), 0);
                 
-                servers[id] = Server(id, sockfd);
+                servers[id] = new Server(id, sockfd, &game);
 
                 std::cout << "SUCCESS" << std::endl;
             } else {
@@ -63,6 +63,10 @@ int main(int argc, char const *argv[])
     for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
         close(*it);
         std::cout  << "." << std::endl;            
+    }
+
+    for (std::map<int, Server*>::iterator it=servers.begin(); it!=servers.end(); it++) {
+        delete it->second;
     }
 
     std::cout << std::endl;

@@ -18,10 +18,11 @@
 
 #include "player.hpp"
 #include "server.hpp"
+#include "NetworkMessages/networkMessage.hpp"
 
 class Game {
     public:
-        Game(int serverId, std::vector<int>& clients, std::map<int, Server>& servers, std::map<int, Player>& players);
+        Game(int serverId, std::vector<int>& clients, std::map<int, Server*>& servers, std::map<int, Player>& players);
 
         void Run();
 
@@ -30,6 +31,11 @@ class Game {
         void Despawn(int objectId);
         void DespawnPlayer(int clientSocket);
 
+        void SendMsgTo(NetworkMessage* msg, int targetId);
+        void SendMsgToAllInterested(NetworkMessage* msg, Player* p1);
+        void SendMsgToAllNotInterested(NetworkMessage* msg, Player* p1);        
+        void SendMsgToAll(NetworkMessage* msg, Player* p1 = NULL, bool interestedOnly = true);
+
         void RegisterServer(int id, int serverSocket);
 
     private:
@@ -37,17 +43,10 @@ class Game {
 
         std::thread* loop;
 
-        int serverId;
-
-        float x = 0;
-        float y = 0;
-
-        float size_x = 10;
-        float size_y = 10;
-        float size_z = 10;
+        Server server;
 
         std::vector<int>& clients;
-        std::map<int, Server>& servers;
+        std::map<int, Server*>& servers;
         std::map<int, Player>& players;
 
         int lastValidId = 10000;
