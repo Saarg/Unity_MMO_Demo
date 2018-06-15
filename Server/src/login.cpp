@@ -77,7 +77,7 @@ void Login::Loop() {
             read(clientSocket, &socketType, sizeof(int));
 
             if (socketType == 0) {
-                printf("New client added with id %d \n", clientSocket);
+                printf("\033[1;32m New client added with id %d \033[1;37m\n", clientSocket);
                 game.SpawnPlayer(clientSocket);
             } else if (socketType == 1) {
                 int id;

@@ -84,7 +84,7 @@ void Server::MsgReception() {
             msg.sourceId = -msg.sourceId;
 
             if (players->count(msg.sourceId) == 0)  {
-                std::cout << "Player " << -msg.sourceId << " from server " << this->id << " entered the border" << std::endl;
+                std::cout << "\033[1;33m Player " << -msg.sourceId << " from server " << this->id << " entered the border \033[1;37m" << std::endl;
 
                 AddPlayer(msg.sourceId);
             }
@@ -98,7 +98,7 @@ void Server::MsgReception() {
             msg.objectId = -msg.objectId;
 
             if (players->count(msg.objectId) != 0)  {            
-                std::cout << "Player " << -msg.objectId << " from server " << this->id << " left the border" << std::endl;
+                std::cout << "\033[1;33m Player " << -msg.objectId << " from server " << this->id << " left the border \033[1;37m" << std::endl;
 
                 RemovePlayer(msg.objectId);
             }
@@ -106,6 +106,8 @@ void Server::MsgReception() {
 
         std::this_thread::sleep_for (std::chrono::milliseconds(10));
     }
+
+    std::cout << "\033[1;33m Server " << id << "'s thread dying \033[1;37m" << std::endl;
 }
 
 void Server::SpawnFor(Player& p1) {

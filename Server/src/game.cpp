@@ -231,7 +231,7 @@ void Game::SendMsgToAll(NetworkMessage* msg, Player* p1, bool interestedOnly) {
 }
 
 void Game::RegisterServer(int id, int serverSocket) {
-    std::cout << "New server added with id " << id << " on socket " << serverSocket << std::endl;
+    std::cout << "\033[1;33m New server added with id " << id << " on socket " << serverSocket << "\033[1;37m" << std::endl;
     
     while (servers.count(id) != 0) {
         servers.erase(id);
@@ -242,7 +242,7 @@ void Game::RegisterServer(int id, int serverSocket) {
 
 void Game::Loop() {
     while (true) {
-        std::this_thread::sleep_for (std::chrono::milliseconds(1));
+        std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
         // Server tick start.
         for (std::map<int, Player>::iterator it=players.begin(); it!=players.end(); it++) {
@@ -357,6 +357,16 @@ void Game::Loop() {
         for (std::map<int, Server*>::iterator it=servers.begin(); it!=servers.end(); it++) {
             it->second->Update();
         }
-        // Server tick end.     
+        // Server tick end.
+
+        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+
+        int duration = std::chrono::duration_cast<std::chrono::milliseconds>( end - start ).count();
+
+        if (duration > 10) {
+            std::cout << "\033[1;31m GameLoop took " << duration << " milliseconds \033[1;37m" << std::endl;
+        } else {
+            std::this_thread::sleep_for (std::chrono::milliseconds(33 - duration));
+        }
     }
 }

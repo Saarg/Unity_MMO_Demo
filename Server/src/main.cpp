@@ -11,6 +11,7 @@ std::map<int, Player> players;
 
 int main(int argc, char const *argv[])
 {
+    std::cout << "\033[1;37m";
     if (argc < 2) {
         std::cout << "Usage: Server port oherServerPort" << std::endl;
         return 0;
@@ -45,10 +46,10 @@ int main(int argc, char const *argv[])
                 
                 servers[id] = new Server(id, sockfd, &game);
 
-                std::cout << "SUCCESS" << std::endl;
+                std::cout << "\033[1;32m SUCCESS \033[1;37m" << std::endl;
             } else {
                 close(sockfd);
-                std::cout << "FAIL" << std::endl;                
+                std::cout << "\033[1;33m FAIL \033[1;37m" << std::endl;                
             }
         }
     }
@@ -59,15 +60,18 @@ int main(int argc, char const *argv[])
     }
 
     std::cout << "Shuting down all sockets";    
-
     for (std::vector<int>::iterator it = clients.begin(); it != clients.end(); it++) {
         close(*it);
-        std::cout  << "." << std::endl;            
+        std::cout  << ".";            
     }
 
+    std::cout  << "." << std::endl;            
+    
+
     for (std::map<int, Server*>::iterator it=servers.begin(); it!=servers.end(); it++) {
+        std::cout  << ".";  
         delete it->second;
     }
 
-    std::cout << std::endl;
+    std::cout  << "." << std::endl;   
 }

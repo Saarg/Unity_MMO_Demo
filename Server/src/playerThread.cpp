@@ -37,7 +37,7 @@ void PlayerThread::Loop() {
             msg.Deserialize(buffer);
 
             if (msg.objectId == client) {
-                std::cout << "client: " << client << " requested spawn of prefab:" << msg.prefabId << std::endl;
+                std::cout << "\033[1;32m client: " << client << " requested spawn of prefab:" << msg.prefabId << " \033[1;37m" << std::endl;
                 game.Spawn(msg.prefabId, msg.objectId);
             }
         } else if (id == 3) {
@@ -45,19 +45,19 @@ void PlayerThread::Loop() {
             msg.Deserialize(buffer);
 
             if (msg.objectId == client) {
-                std::cout << "client: " << client << " gracefully disconected" << std::endl;
+                std::cout << "\033[1;32m client: " << client << " gracefully disconected \033[1;37m" << std::endl;
                 game.DespawnPlayer(client);
             } else if (msg.objectId >= 10000) {
-                std::cout << "client: " << client << " requested despawn of object:" << msg.objectId << std::endl;
+                std::cout << "\033[1;32m client: " << client << " requested despawn of object:" << msg.objectId << " \033[1;37m" <<std::endl;
                 game.Despawn(msg.objectId);    
             } else {
-                std::cout << "client: " << client << " requested despawn of object:" << msg.objectId << " whitout the right to do so!" << std::endl;                
+                std::cout << "\033[1;32m client: " << client << " requested despawn of object:" << msg.objectId << " whitout the right to do so! \033[1;37m" << std::endl;                
             }
         }
 
         std::this_thread::sleep_for (std::chrono::milliseconds(10));
     }
 
-    std::cout << "Client " << client << "'s thread dying" << std::endl;
+    std::cout << "\033[1;32m Client " << client << "'s thread dying \033[1;37m" << std::endl;
     delete this;
 }

@@ -237,8 +237,6 @@ public class ConnectionToServer : MonoBehaviour {
 	void MsgThread()
 	{
 		while (true) {
-			Thread.Sleep(10);
-
 			byte[] buffer = new byte[sizeof(int)];
 			Read(ref buffer);
 			int length = BitConverter.ToInt32(buffer, 0);
