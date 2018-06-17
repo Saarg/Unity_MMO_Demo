@@ -17,11 +17,15 @@ public class NetworkTransform : NetworkComponent {
 	Vector3 newPosition;
 	Quaternion newRotation;
 
+    Animator animator;
+
     public void OnEnable() {
         lastPosition = newPosition = transform.position;
 		lastRotation = newRotation = transform.rotation;
 
         lastReception = Time.realtimeSinceStartup;
+
+        animator = GetComponent<Animator>();
     }
 	
 	// Update is called once per frame
@@ -50,7 +54,7 @@ public class NetworkTransform : NetworkComponent {
         lastPosition = transform.position;
         lastRotation = transform.rotation;
 
-        Animator animator = transform.GetComponent<Animator>();
+        animator = transform.GetComponent<Animator>();
         if (animator != null)
         {           
             UpdateAnimator(animator, lastPosition, newPosition);
@@ -72,7 +76,7 @@ public class NetworkTransform : NetworkComponent {
     {
         float speed = (newPosition - lastPosition).sqrMagnitude;
 
-        if (speed > .1f)
+        if (speed > 0f)
         {
             animator.SetBool("isRunning", true);
         }

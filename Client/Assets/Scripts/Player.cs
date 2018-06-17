@@ -12,6 +12,7 @@ public class Player : NetworkComponent {
     [Range(5f, 20f)]
     [SerializeField] float interestRadius = 8f;
 
+    [SerializeField] new Camera camera;
     [SerializeField] Animator animator;
 
 	void Start () {
@@ -19,16 +20,17 @@ public class Player : NetworkComponent {
 
         speed += speed * Random.Range(-0.2f, 0.2f);
     }
-	
-	void Update () {
-        if (netId.hasAuthority) {
+
+    void FixedUpdate() {
+         if (netId.hasAuthority) {
             Vector3 inputs = new Vector3(Input.GetAxis(horizontalInput), 0, Input.GetAxis(verticalInput)).normalized;
-            Vector3 translation = inputs * Time.deltaTime * speed;
+            Vector3 translation = inputs * Time.fixedDeltaTime * speed;
 
             transform.position += translation;
             if (inputs.sqrMagnitude != 0)
                 transform.rotation = Quaternion.LookRotation(inputs, Vector3.up);
-                        
+            
+            print(translation.sqrMagnitude);
             if (animator != null)
             {
                 UpdateAnimator(translation.sqrMagnitude);
@@ -37,13 +39,14 @@ public class Player : NetworkComponent {
             {
                 Debug.Log("No animator found");
             }
-            
+        } else if (camera != null) {
+            Destroy(camera.gameObject);
         }
-	}
+    }
 
     private void UpdateAnimator(float speed)
     {
-        if (speed > .01f)
+        if (speed > 0f)
         {
             animator.SetBool("isRunning", true);
         }

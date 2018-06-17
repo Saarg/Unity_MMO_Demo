@@ -283,7 +283,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c36cec47046d44efebed170c21c51764, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ip: localhost
+  ip: 51.15.247.163
   port: 9502
   autoconnect: 0
   spawnablePrefabs:
