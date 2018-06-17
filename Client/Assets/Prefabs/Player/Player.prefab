@@ -2292,6 +2292,9 @@ MonoBehaviour:
   interestRadius: 10
   camera: {fileID: 20259261400103384}
   animator: {fileID: 95063936681122332}
+  targetRenderer: {fileID: 137038889777478612}
+  localPlayerMat: {fileID: 2100000, guid: 375df2e2f9e624f499684db857483500, type: 2}
+  onlinePlayerMat: {fileID: 2100000, guid: d21837f34e1f64331a99176a003726a5, type: 2}
 --- !u!124 &124408446688377850
 Behaviour:
   m_ObjectHideFlags: 1
@@ -2327,7 +2330,7 @@ SkinnedMeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RenderingLayerMask: 4294967295
   m_Materials:
-  - {fileID: 2100000, guid: 1a4d634a5ae6c16488ea28cf7e17b7ab, type: 3}
+  - {fileID: 2100000, guid: 375df2e2f9e624f499684db857483500, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -15,8 +15,18 @@ public class Player : NetworkComponent {
     [SerializeField] new Camera camera;
     [SerializeField] Animator animator;
 
+    [SerializeField] Renderer targetRenderer;
+    [SerializeField] Material localPlayerMat;
+    [SerializeField] Material onlinePlayerMat;
+
 	void Start () {
-        animator = GetComponent<Animator>();
+         animator = GetComponent<Animator>();
+
+        if (netId.hasAuthority) {
+            targetRenderer.material = localPlayerMat;
+        } else {
+            targetRenderer.material = onlinePlayerMat;            
+        }
 
         speed += speed * Random.Range(-0.2f, 0.2f);
     }
@@ -27,10 +37,14 @@ public class Player : NetworkComponent {
             Vector3 translation = inputs * Time.fixedDeltaTime * speed;
 
             transform.position += translation;
-            if (inputs.sqrMagnitude != 0)
-                transform.rotation = Quaternion.LookRotation(inputs, Vector3.up);
+
+            if (inputs.sqrMagnitude != 0) {
+                Quaternion targetRot;
+                targetRot = Quaternion.LookRotation(inputs, Vector3.up);
+
+                transform.rotation = Quaternion.Lerp(transform.rotation, targetRot, 3f*Time.fixedDeltaTime);
+            }
             
-            print(translation.sqrMagnitude);
             if (animator != null)
             {
                 UpdateAnimator(translation.sqrMagnitude);
