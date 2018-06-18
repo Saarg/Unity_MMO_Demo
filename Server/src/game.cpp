@@ -322,8 +322,8 @@ void Game::Loop() {
                 }  
 
                 // Update for borders
-                if (server.Id() == 9501 and servers.count(9502) != 0) {
-                    Server* s = servers[9502];
+                if (server.Id() == 80 and servers.count(443) != 0) {
+                    Server* s = servers[443];
 
                     if (p1.position[0] + p1.interestRadius > server.X() + server.Size_x()/2) {
                         msg.Send(s->GetSocket());
@@ -336,8 +336,8 @@ void Game::Loop() {
 
                         s->RemovePlayer(p1Id, false);
                     }
-                } else if(server.Id() == 9502 and servers.count(9501) != 0) {                
-                        Server* s = servers[9501];
+                } else if(server.Id() == 443 and servers.count(80) != 0) {                
+                        Server* s = servers[80];
 
                     if (p1.position[0] - p1.interestRadius < server.X() - server.Size_x()/2) {
                         msg.Send(s->GetSocket());

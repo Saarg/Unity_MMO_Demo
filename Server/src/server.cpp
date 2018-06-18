@@ -9,14 +9,14 @@
 #include "NetworkMessages/enableMessage.hpp"
 
 Server::Server(int id, int socket, Game* game): id(id), socket(socket), game(game), players() {
-    if (id == 9501) {
+    if (id == 80) {
         x = -20;
         z = 0;
 
         size_x = 39;
         size_y = 40;
         size_z = 39;
-    } else if (id == 9502) {
+    } else if (id == 443) {
         x = 20;
         z = 0;
 
