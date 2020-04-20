@@ -7,7 +7,7 @@
 
 class EnableMessage: public NetworkMessage {
     public:
-        EnableMessage(): NetworkMessage(4, 1 + 8*sizeof(int) + sizeof(bool)) {}
+        EnableMessage(): NetworkMessage(4, 1 + sizeof(int) + 7*sizeof(float) + sizeof(bool)) {}
 
         ~EnableMessage() {}
 
